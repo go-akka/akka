@@ -2,6 +2,7 @@ package actor
 
 import (
 	"errors"
+	"fmt"
 	"github.com/go-akka/akka"
 	"reflect"
 )
@@ -17,12 +18,14 @@ var (
 	actorBaseInitFuncType = reflect.TypeOf((*ActorBaseInitFunc)(nil)).Elem()
 	actorBasePtrType      = reflect.TypeOf((*ActorBase)(nil))
 	unTypedActorPtrType   = reflect.TypeOf((*UntypedActor)(nil))
+	receiveActorPtrType   = reflect.TypeOf((*ReceiveActor)(nil))
 	errorType             = reflect.TypeOf((*error)(nil)).Elem()
 )
 
 type _ReflectProducer struct {
-	typ  reflect.Type
-	args []interface{}
+	typ      reflect.Type
+	args     []interface{}
+	baseType reflect.Type
 }
 
 func _NewReflectProducer(v interface{}, args ...interface{}) (producer IndirectActorProducer, err error) {
@@ -41,12 +44,18 @@ func (p *_ReflectProducer) Init(v interface{}, args ...interface{}) (err error) 
 		p.typ = reflect.TypeOf(v).Elem()
 	}
 
-	if !isCombinedUnTypedActor(p.typ) {
-		err = ErrNoActorBaseCombind
+	if isCombined(p.typ, unTypedActorPtrType) {
+		p.args = args
+		p.baseType = unTypedActorPtrType
+		return
+	} else if isCombined(p.typ, receiveActorPtrType) {
+		p.args = args
+		p.baseType = receiveActorPtrType
 		return
 	}
 
-	p.args = args
+	err = ErrNoUntypedActorOrReceiveActorCombind
+
 	return
 }
 
@@ -65,11 +74,19 @@ func (p *_ReflectProducer) Produce() (actor akka.Actor, err error) {
 
 	receiver := val.Interface().(akka.Receiver)
 
-	untypedActor := NewUntypedActor(receiver.Receive)
+	if p.baseType == unTypedActorPtrType {
+		untypedActor := NewUntypedActor(receiver.Receive)
+		combine(val, unTypedActorPtrType, untypedActor)
+		actor = untypedActor.ActorBase
+	} else if p.baseType == receiveActorPtrType {
+		receiveActor := NewReceiveActor()
+		combine(val, receiveActorPtrType, receiveActor)
+		actor = receiveActor.ActorBase
+	}
 
-	combinedUnTypedActor(val, untypedActor)
-
-	actor = untypedActor.ActorBase
+	if err = initInstance(val, p.args...); err != nil {
+		return
+	}
 
 	return
 }
@@ -126,29 +143,29 @@ func isCombinedActorBase(v reflect.Type) (isCombined bool) {
 	return
 }
 
-func isCombinedUnTypedActor(v reflect.Type) (isCombined bool) {
+func isCombined(v reflect.Type, combineType reflect.Type) bool {
 	for i := 0; i < v.NumField(); i++ {
-		if v.Field(i).Type == unTypedActorPtrType {
+		if v.Field(i).Type == combineType {
 			return true
 		}
 	}
 
-	return
+	return false
 }
 
-func combinedUnTypedActor(val reflect.Value, unTypedActor *UntypedActor) (err error) {
+func combine(val reflect.Value, combineType reflect.Type, combineValue interface{}) (err error) {
 
 	typ := val.Elem().Type()
 
 	for i := 0; i < typ.NumField(); i++ {
-		if typ.Field(i).Type == unTypedActorPtrType {
-			actorVal := reflect.ValueOf(unTypedActor)
+		if typ.Field(i).Type == combineType {
+			actorVal := reflect.ValueOf(combineValue)
 			val.Elem().Field(i).Set(actorVal)
 			return
 		}
 	}
 
-	err = ErrNoActorBaseCombind
+	err = fmt.Errorf("struct should combine %s", combineType.String())
 	return
 }
 
@@ -157,10 +174,6 @@ func createInstanceByType(typ reflect.Type, args ...interface{}) (v reflect.Valu
 
 	if !typVal.IsValid() {
 		err = ErrCreateInstanceFailure
-		return
-	}
-
-	if err = initInstance(typVal, args...); err != nil {
 		return
 	}
 

@@ -1,7 +1,8 @@
 package akka
 
 type Classifier interface {
-	Classify(event interface{}) interface{}
+	Classify(event interface{}, classifier interface{}) bool
+	GetClassifier(event interface{})
 }
 
 type Publisher interface {

@@ -49,7 +49,7 @@ type SystemGuardianActor struct {
 func (p *SystemGuardianActor) Receive(message interface{}) (unhandled bool) {
 
 	switch msg := message.(type) {
-	case akka.Terminated:
+	case *akka.Terminated:
 		{
 			terminatedActor := msg.Actor()
 			if p.userGuardian.Equals(terminatedActor) {
@@ -66,7 +66,7 @@ func (p *SystemGuardianActor) Receive(message interface{}) (unhandled bool) {
 
 			return
 		}
-	case akka.StopChild:
+	case *akka.StopChild:
 		{
 			p.Context().StopActor(msg.Child())
 		}
