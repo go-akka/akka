@@ -1,56 +1,47 @@
 package actor
 
 import (
+	"github.com/go-akka/akka"
 	"reflect"
 )
 
-var (
-	_ IndirectActorProducer = (*_CreatorFunctionConsumer)(nil)
-	_ IndirectActorProducer = (*_ArgsReflectConstructor)(nil)
-)
-
 type IndirectActorProducer interface {
-	Produce() (actor Actor, err error)
+	Produce() (actor akka.Actor, err error)
 	ActorType() reflect.Type
 }
 
-func NewIndirectActorProducer(typ reflect.Type, args ...interface{}) (producer IndirectActorProducer, err error) {
+func _CreateProducer(v interface{}, args ...interface{}) (producer IndirectActorProducer, err error) {
+	typ := reflect.TypeOf(v)
+
+	if typ == nil {
+		producer = &_DefaultProducer{}
+		return
+	}
+
+	if _, ok := v.(IndirectActorProducer); ok {
+		var obj interface{}
+		if obj, err = createInstanceByType(typ, args...); err != nil {
+			return
+		}
+
+		producer = obj.(IndirectActorProducer)
+
+		return
+	} else if producer, err = _NewReflectProducer(v, args...); err != nil {
+		return
+	}
+
 	return
 }
 
-type _CreatorFunctionConsumer struct {
-	typ     reflect.Type
-	creator func() (Actor, error)
+type _DefaultProducer struct {
 }
 
-func (p *_CreatorFunctionConsumer) Init(typ reflect.Type, creator func() (Actor, error)) {
-	p.typ = typ
-	p.creator = creator
-}
-
-func (p *_CreatorFunctionConsumer) Produce() (actor Actor, err error) {
-	return p.creator()
-}
-
-func (p *_CreatorFunctionConsumer) ActorType() reflect.Type {
-	return p.typ
-}
-
-type _ArgsReflectConstructor struct {
-	typ  reflect.Type
-	args []interface{}
-}
-
-func (p *_ArgsReflectConstructor) Init(typ reflect.Type, args ...interface{}) {
-	p.typ = typ
-	p.args = args
+func (p *_DefaultProducer) Produce() (actor akka.Actor, err error) {
+	err = ErrNoActorProducerSpecified
 	return
 }
 
-func (p *_ArgsReflectConstructor) Produce() (actor Actor, err error) {
-	return
-}
-
-func (p *_ArgsReflectConstructor) ActorType() reflect.Type {
-	return p.typ
+func (p *_DefaultProducer) ActorType() reflect.Type {
+	return nil
 }

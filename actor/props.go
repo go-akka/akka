@@ -1,57 +1,81 @@
 package actor
 
-var (
-	_ Actor = (*emptyActor)(nil)
+import (
+	"github.com/go-akka/akka"
 )
 
 var (
-	ActorProps = EmptyProps()
+	Props = &ActorProps{}
 )
 
-type emptyActor struct {
+type ActorProps struct {
+	deploy       akka.Deploy
+	mailbox      string
+	dispatcher   string
+	routerConfig akka.RouterConfig
+	producer     IndirectActorProducer
 }
 
-func (p *emptyActor) Receive(message interface{}) (unmatched bool) {
+func (p ActorProps) Create(v interface{}, args ...interface{}) (props akka.Props, err error) {
+	var producer IndirectActorProducer
+	if producer, err = _CreateProducer(v, args...); err != nil {
+		return
+	}
+
+	props = &ActorProps{
+		producer: producer,
+	}
+
 	return
 }
 
-type Props struct {
-	actor  Actor
-	deploy Deploy
-}
-
-func EmptyProps() Props {
-	return Props{actor: &emptyActor{}}
-}
-
-func (p Props) Create(v interface{}, args ...interface{}) (props Props, err error) {
+func (p ActorProps) newActor() (actor akka.Actor, err error) {
+	actor, err = p.producer.Produce()
 	return
 }
 
-func (p Props) Dispatcher() string {
-	return p.deploy.dispatcher
+func (p ActorProps) Dispatcher() string {
+	return p.deploy.Dispatcher()
 }
 
-func (p Props) Mailbox() string {
-	return p.deploy.mailbox
+func (p ActorProps) Mailbox() string {
+	return p.deploy.Mailbox()
 }
 
-func (p Props) RouterConfig() RouterConfig {
-	return p.deploy.routerConfig
+func (p ActorProps) RouterConfig() akka.RouterConfig {
+	return p.deploy.RouterConfig()
 }
 
-func (p Props) WithDeploy(deploy Deploy) (props Props, err error) {
+func (p ActorProps) WithDeploy(deploy akka.Deploy) (props akka.Props, err error) {
+	newProps := p.copy()
+	newProps.deploy = deploy
 	return
 }
 
-func (p Props) WithDispatcher(dispatcher string) (props Props, err error) {
+func (p ActorProps) WithDispatcher(dispatcher string) (props akka.Props, err error) {
+	newProps := p.copy()
+	newProps.dispatcher = dispatcher
 	return
 }
 
-func (p Props) WithMailbox(mailbox string) (props Props, err error) {
+func (p ActorProps) WithMailbox(mailbox string) (props akka.Props, err error) {
+	newProps := p.copy()
+	newProps.mailbox = mailbox
 	return
 }
 
-func (p Props) WithRouter(config RouterConfig) (props Props, err error) {
+func (p ActorProps) WithRouter(config akka.RouterConfig) (props akka.Props, err error) {
+	newProps := p.copy()
+	newProps.routerConfig = config
 	return
+}
+
+func (p ActorProps) copy() (props *ActorProps) {
+	return &ActorProps{
+		deploy:       p.deploy,
+		mailbox:      p.mailbox,
+		dispatcher:   p.dispatcher,
+		routerConfig: p.routerConfig,
+		producer:     p.producer,
+	}
 }
