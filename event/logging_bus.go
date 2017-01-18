@@ -23,3 +23,6 @@ func (p *LoggingBus) SetLogLevel(level akka.LogLevel) {
 func (p *LoggingBus) LogLevel() akka.LogLevel {
 	return p.logLevel
 }
+
+func (p *LoggingBus) StartStdoutLogger(config *akka.Settings) {
+}

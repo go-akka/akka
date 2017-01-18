@@ -3,6 +3,8 @@ package akka
 type Cell interface {
 	Self() ActorRef
 	System() ActorSystem
+	Dispatcher() MessageDispatcher
+	AttachChild(props Props, name string, systemService bool) (ref ActorRef, err error)
 
 	Start()
 	Suspend()

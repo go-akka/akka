@@ -5,4 +5,6 @@ type LoggingBus interface {
 
 	SetLogLevel(level LogLevel)
 	LogLevel() LogLevel
+
+	StartStdoutLogger(config *Settings)
 }

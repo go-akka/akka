@@ -23,7 +23,7 @@ func NewEventStream(sys akka.ActorSystem, debug bool) akka.EventStream {
 func (p *EventStream) StartUnsubscriber() {
 }
 
-func (p *EventStream) Publish(event interface{}, subscriber interface{}) {
+func (p *EventStream) PublishToSubscriber(event interface{}, subscriber interface{}) {
 
 	sub, ok := subscriber.(akka.ActorRef)
 	if !ok {
@@ -35,17 +35,21 @@ func (p *EventStream) Publish(event interface{}, subscriber interface{}) {
 		return
 	}
 
-	sub.Tell(event, akka.NoSender)
+	sub.Tell(event, (*akka.NoSender)(nil))
 }
 
-func (p *EventStream) Classify(event interface{}) interface{} {
+func (p *EventStream) GetClassifier(event interface{}) interface{} {
 	return reflect.TypeOf(event)
 }
 
+func (p *EventStream) Classify(event interface{}, classifier interface{}) bool {
+	return p.GetClassifier(event) == classifier.(reflect.Type)
+}
+
 func (p *EventStream) Subscribe(subscriber akka.ActorRef, channel interface{}) bool {
-	return p.LoggingBus.Subscribe(subscriber, channel)
+	return p.LoggingBus.TSubscribe(subscriber, channel)
 }
 
 func (p *EventStream) Unsubscribe(subscriber akka.ActorRef, channels ...interface{}) bool {
-	return p.LoggingBus.Unsubscribe(subscriber, channels...)
+	return p.LoggingBus.TUnsubscribe(subscriber, channels...)
 }

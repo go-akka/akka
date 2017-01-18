@@ -21,10 +21,10 @@ func NewSubchannelClassification(publisher akka.Publisher, classifier akka.Class
 func (p *SubchannelClassification) Publish(event interface{}) {
 }
 
-func (p *SubchannelClassification) Subscribe(subscriber interface{}, class interface{}) bool {
+func (p *SubchannelClassification) TSubscribe(subscriber interface{}, class interface{}) bool {
 	return false
 }
 
-func (p *SubchannelClassification) Unsubscribe(subscriber interface{}, classes ...interface{}) bool {
+func (p *SubchannelClassification) TUnsubscribe(subscriber interface{}, classes ...interface{}) bool {
 	return false
 }

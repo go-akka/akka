@@ -1,6 +1,9 @@
 package actor
 
 import (
+	"fmt"
+	"github.com/go-akka/akka/dispatch"
+	"github.com/go-akka/akka/event"
 	"regexp"
 	"sync"
 	"time"
@@ -23,11 +26,11 @@ type ActorSystemImpl struct {
 	dynamicAccess dynamic_access.DynamicAccess
 	eventStream   akka.EventStream
 	scheduler     akka.Scheduler
+	mailboxes     akka.Mailboxes
+	deadletters   akka.ActorRef
 
-	provider       akka.ActorRefProvider
-	lookupRoot     akka.InternalActorRef
-	guardian       *LocalActorRef
-	systemGuardian *LocalActorRef
+	provider   akka.ActorRefProvider
+	lookupRoot akka.InternalActorRef
 }
 
 func AkkaClassLoader() class_loader.ClassLoader {
@@ -66,7 +69,8 @@ func NewActorSystem(name string, config ...*configuration.Config) (system *Actor
 	// 	return
 	// }
 	sys.configureProvider()
-	// sys.configureMailboxes()
+	// sys.configureTerminationCallbacks()
+	sys.configureMailboxes()
 	// sys.configureDispatchers()
 
 	system = sys
@@ -86,6 +90,14 @@ func (p *ActorSystemImpl) Descendant(names ...string) (path akka.ActorPath, err 
 	return
 }
 
+func (p *ActorSystemImpl) Guardian() akka.LocalActorRef {
+	return p.provider.Guardian()
+}
+
+func (p *ActorSystemImpl) SystemGuardian() akka.LocalActorRef {
+	return p.provider.SystemGuardian()
+}
+
 func (p *ActorSystemImpl) Terminate() (wg sync.WaitGroup) {
 	return
 }
@@ -103,7 +115,11 @@ func (p *ActorSystemImpl) Log() {
 }
 
 func (p *ActorSystemImpl) DeadLetters() akka.ActorRef {
-	return nil
+	return p.deadletters
+}
+
+func (p *ActorSystemImpl) EventStream() akka.EventStream {
+	return p.eventStream
 }
 
 func (p *ActorSystemImpl) StartTime() int64 {
@@ -141,7 +157,7 @@ func (p *ActorSystemImpl) Tell(message interface{}, sender akka.ActorRef) {
 }
 
 func (p *ActorSystemImpl) ActorOf(props akka.Props, name string) (ref akka.ActorRef, err error) {
-	return p.guardian.Cell().AttachChild(props, name, false)
+	return p.Guardian().Underlying().AttachChild(props, name, false)
 }
 
 func (p *ActorSystemImpl) Stop(actor akka.ActorRef) (err error) {
@@ -172,7 +188,8 @@ func (p *ActorSystemImpl) configureSettings(config *configuration.Config) (err e
 }
 
 func (p *ActorSystemImpl) configureEventStream() (err error) {
-	// p.eventStream = NewEventStream(p.settings.DebugEventStream)
+	p.eventStream = event.NewEventStream(p, p.settings.DebugEventStream)
+	p.eventStream.StartStdoutLogger(p.settings)
 	return
 }
 
@@ -183,7 +200,7 @@ func (p *ActorSystemImpl) configureLoggers() (err error) {
 func (p *ActorSystemImpl) configureScheduler() (err error) {
 	schedulerType, exist := p.classLoader.ClassNameOf(p.settings.SchedulerClass)
 	if !exist {
-		err = akka.ErrTypeNotExistInClassLoader
+		err = fmt.Errorf("type not in class loader, %s: %s", "akka.scheduler.implementation", p.settings.SchedulerClass)
 		return
 	}
 
@@ -222,6 +239,7 @@ func (p *ActorSystemImpl) configureProvider() (err error) {
 }
 
 func (p *ActorSystemImpl) configureMailboxes() (err error) {
+	p.mailboxes = dispatch.NewMailboxes(p.settings, p.eventStream, p.dynamicAccess, p.deadletters)
 	return
 }
 

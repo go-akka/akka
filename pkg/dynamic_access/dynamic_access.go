@@ -2,6 +2,7 @@ package dynamic_access
 
 import (
 	"errors"
+	"fmt"
 	"github.com/go-akka/akka/pkg/class_loader"
 
 	"reflect"
@@ -52,7 +53,7 @@ func (p *ReflectiveDynamicAccess) CreateInstanceByType(typ reflect.Type, args ..
 
 func (p *ReflectiveDynamicAccess) CreateInstanceByName(name string, args ...interface{}) (ins interface{}, err error) {
 	if typ, exist := p.classLoader.ClassNameOf(name); !exist {
-		err = ErrTypeNotExistInClassLoader
+		err = fmt.Errorf("[ErrTypeNotExistInClassLoader] TypeName: %s", name)
 		return
 	} else {
 		return p.CreateInstanceByType(typ, args...)

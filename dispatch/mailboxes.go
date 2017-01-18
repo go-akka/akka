@@ -1,0 +1,64 @@
+package dispatch
+
+import (
+	"github.com/go-akka/akka"
+	"github.com/go-akka/akka/pkg/dynamic_access"
+	"github.com/go-akka/configuration"
+	"github.com/orcaman/concurrent-map"
+)
+
+const (
+	DefaultMailboxId = "akka.actor.default-mailbox"
+)
+
+type Mailboxes struct {
+	settings      *akka.Settings
+	eventStream   akka.EventStream
+	deadLetters   akka.ActorRef
+	dynamicAccess dynamic_access.DynamicAccess
+
+	mailboxTypeConfigurators cmap.ConcurrentMap
+
+	defaultMailboxConfig *configuration.Config
+	deadLetterMailbox    akka.Mailbox
+}
+
+func NewMailboxes(
+	settings *akka.Settings,
+	eventStream akka.EventStream,
+	dynamicAccess dynamic_access.DynamicAccess,
+	deadLetters akka.ActorRef,
+) akka.Mailboxes {
+
+	mailboxes := &Mailboxes{
+		settings:                 settings,
+		eventStream:              eventStream,
+		deadLetters:              deadLetters,
+		dynamicAccess:            dynamicAccess,
+		mailboxTypeConfigurators: cmap.New(),
+		defaultMailboxConfig:     settings.Config().GetConfig(DefaultMailboxId),
+	}
+
+	return mailboxes
+}
+
+func (p *Mailboxes) Lookup(id string) (t akka.MailboxType, exist bool) {
+	v, ok := p.mailboxTypeConfigurators.Get(id)
+	if !ok {
+		return
+	}
+
+	t = v.(akka.MailboxType)
+	return
+}
+
+func (p *Mailboxes) lookupConfigurator(id string) (t akka.MailboxType, exist bool) {
+
+	if id == "unbounded" {
+		t = NewUnboundedMailbox()
+		exist = true
+		return
+	}
+
+	return
+}

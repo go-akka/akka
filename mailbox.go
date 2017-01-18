@@ -1,7 +1,7 @@
 package akka
 
 import (
-// "github.com/go-akka/configuration"
+	"github.com/go-akka/configuration"
 )
 
 type Mailbox interface {
@@ -14,6 +14,7 @@ type Mailbox interface {
 // }
 
 type MailboxType interface {
+	Init(settings Settings, config configuration.Config) error
 	Create(owner ActorRef, system ActorSystem) MessageQueue
 }
 

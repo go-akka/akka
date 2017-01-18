@@ -7,3 +7,7 @@ type Receiver interface {
 type Actor interface {
 	Receiver
 }
+
+type AutoReceivedMessage interface {
+	AutoReceivedMessage()
+}

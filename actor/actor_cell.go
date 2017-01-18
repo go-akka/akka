@@ -21,6 +21,8 @@ type ActorCell struct {
 	currentMsg interface{}
 	mailbox    akka.Mailbox
 
+	behaviorStack *BehaviorStack
+
 	actor *ActorBase
 	IChildren
 	IDispatch
@@ -37,13 +39,14 @@ func NewActorCell(
 ) *ActorCell {
 
 	return &ActorCell{
-		self:       self,
-		system:     system,
-		props:      props,
-		dispitcher: dispatcher,
-		parent:     parent,
-		IChildren:  children,
-		IDispatch:  dispatch,
+		self:          self,
+		system:        system,
+		props:         props,
+		dispitcher:    dispatcher,
+		parent:        parent,
+		behaviorStack: NewBehaviorStack(),
+		IChildren:     children,
+		IDispatch:     dispatch,
 	}
 }
 
@@ -144,10 +147,18 @@ func (p *ActorCell) ActorSelection(path akka.ActorPath) (selection akka.ActorSel
 }
 
 func (p *ActorCell) Become(receive akka.ReceiveFunc, discardOld bool) (err error) {
+	if discardOld && p.behaviorStack.Len() > 0 {
+		p.behaviorStack.Pop()
+	}
+	p.behaviorStack.Push(receive)
 	return
 }
 
 func (p *ActorCell) Unbecome() {
+	p.behaviorStack.Pop()
+	if p.behaviorStack.Len() == 0 {
+		p.behaviorStack.Push(p.actor.receive)
+	}
 	return
 }
 
@@ -164,5 +175,10 @@ func (p *ActorCell) Watch(subject akka.ActorRef) (err error) {
 }
 
 func (p *ActorCell) Unwatch(subject akka.ActorRef) {
+	return
+}
+
+func (p *ActorCell) publish(e akka.LogEvent) {
+	p.system.EventStream().Publish(e)
 	return
 }

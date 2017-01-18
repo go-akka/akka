@@ -13,6 +13,8 @@ type ActorSystem interface {
 	DeadLetters() ActorRef
 	Terminate() sync.WaitGroup
 
+	EventStream() EventStream
+
 	RegisterOnTermination(fn func())
 
 	// Child is Create a new child actor path.

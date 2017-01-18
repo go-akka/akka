@@ -31,8 +31,8 @@ func (p *LocalActorRefProvider) ActorOf(
 	deploy akka.Deploy,
 	lookupDeploy bool,
 	async bool) akka.InternalActorRef {
-	dispitcher := akka.MessageDispatcher{}
-	return NewLocalActorRef(system, props, dispitcher, nil, supervisor, path)
+	// dispitcher := akka.MessageDispatcher{}
+	return NewLocalActorRef(system, props, nil, nil, supervisor, path)
 }
 
 func (p *LocalActorRefProvider) Init(system akka.ActorSystem) {

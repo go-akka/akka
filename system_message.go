@@ -6,6 +6,9 @@ type Terminated struct {
 	existenceConfirmed bool
 }
 
+func (p *Terminated) AutoReceivedMessage() {
+}
+
 // Actor is the watched actor that terminated
 func (p *Terminated) Actor() ActorRef {
 	return p.actor
@@ -29,4 +32,34 @@ type StopChild struct {
 
 func (p *StopChild) Child() ActorRef {
 	return p.child
+}
+
+type AddressTerminated struct {
+}
+
+func (p *AddressTerminated) AutoReceivedMessage() {
+}
+
+type Kill struct {
+}
+
+func (p *Kill) AutoReceivedMessage() {
+}
+
+type PoisonPill struct {
+}
+
+func (p *PoisonPill) AutoReceivedMessage() {
+}
+
+type ActorSelectionMessage struct {
+}
+
+func (p *ActorSelectionMessage) AutoReceivedMessage() {
+}
+
+type Identify struct {
+}
+
+func (p *Identify) AutoReceivedMessage() {
 }

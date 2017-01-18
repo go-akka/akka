@@ -1,22 +1,15 @@
 package akka
 
-import (
-	"reflect"
-)
-
 type MessageQueue interface {
+	Enqueue(receiver ActorRef, envelope Envelope) (err error)
+	Dequeue() (envelope Envelope, ok bool)
 	CleanUp(owner ActorRef, deadLetters MessageQueue) (err error)
-	Dequeue() (envelope Envelope, err error)
-	Enqueue(receiver ActorRef, handle Envelope) (err error)
-	HasMessages() bool
+
 	NumberOfMessages() int
+	HasMessages() bool
 }
 
 type QueueBasedMessageQueue interface {
 	MessageQueue
 	Queue() []Envelope
-}
-
-type RequiresMessageQueue interface {
-	RequiresMessageQueue() reflect.Type
 }

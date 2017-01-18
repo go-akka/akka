@@ -16,6 +16,7 @@ type Settings struct {
 	ProviderClass           string
 	SupervisorStrategyClass string
 	DebugEventStream        bool
+	DebugAutoReceive        bool
 	LogLevel                string
 	SchedulerClass          string
 
@@ -27,13 +28,16 @@ type Settings struct {
 func NewSettings(systemName string, config *configuration.Config) (settings *Settings, err error) {
 	s := &Settings{
 		userConfig: config,
-		// system:           system,
-		name:             systemName,
-		DebugEventStream: config.GetBoolean("akka.actor.debug.event-stream", false),
-		ProviderClass:    config.GetString("akka.actor.provider"),
-		LogLevel:         config.GetString("akka.loglevel"),
-		SchedulerClass:   config.GetString("akka.scheduler.implementation"),
+		name:       systemName,
 	}
+
+	s.rebuildConfig()
+
+	s.DebugEventStream = config.GetBoolean("akka.actor.debug.event-stream", false)
+	s.ProviderClass = config.GetString("akka.actor.provider")
+	s.LogLevel = config.GetString("akka.loglevel")
+	s.SchedulerClass = config.GetString("akka.scheduler.implementation")
+
 	settings = s
 	return
 }

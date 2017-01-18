@@ -2,7 +2,7 @@ package actor
 
 import (
 	"github.com/go-akka/akka"
-	"sync"
+	"time"
 )
 
 var emptyBehavior = func(_ interface{}) bool {
@@ -15,14 +15,13 @@ type ActorBase struct {
 
 	receive akka.ReceiveFunc
 
-	cellInitOnce sync.Once
-
 	ctx akka.ActorContext
 }
 
 func NewActorBase(receive akka.ReceiveFunc) *ActorBase {
 	actorBase := &ActorBase{
 		receive: receive,
+		ctx:     NewActorCell(nil, nil, nil, nil, nil, nil, nil),
 	}
 
 	actorBase.Become(receive, true)
@@ -35,11 +34,38 @@ func (p *ActorBase) String() string {
 }
 
 func (p *ActorBase) Context() akka.ActorContext {
-	p.cellInitOnce.Do(func() {
-		p.ctx = &ActorCell{}
-	})
-
+	if p.hasBeenCleared {
+		return nil
+	}
 	return p.ctx
+}
+
+func (p *ActorBase) AroundReceive(receiveFunc akka.ReceiveFunc, message interface{}) (wasHandled bool, err error) {
+	wasHandled, err = receiveFunc(message)
+	if !wasHandled {
+		p.Unhandled(message)
+	}
+	return
+}
+
+func (p *ActorBase) Receive(message interface{}) (wasHandled bool, err error) {
+
+	if wasHandled, err = p.receive(message); err != nil {
+		return
+	} else if !wasHandled {
+		err = p.Unhandled(message)
+		return
+	}
+
+	return
+}
+
+func (p *ActorBase) Unhandled(message interface{}) (err error) {
+	if terminatedMessage, ok := message.(akka.Terminated); ok {
+		p.Context().System().EventStream().Publish(&akka.UnhandledMessage{terminatedMessage, p.Sender(), p.Self()})
+	}
+
+	return
 }
 
 func (p *ActorBase) Sender() akka.ActorRef {
@@ -57,18 +83,6 @@ func (p *ActorBase) Become(receive akka.ReceiveFunc, discardOld bool) (err error
 	return p.Context().Become(receive, discardOld)
 }
 
-func (p *ActorBase) Receive(message interface{}) (wasHandled bool, err error) {
-
-	if wasHandled, err = p.receive(message); err != nil {
-		return
-	} else if !wasHandled {
-		err = p.Unhandled(message)
-		return
-	}
-
-	return
-}
-
-func (p *ActorBase) Unhandled(message interface{}) (err error) {
-	return
+func (p *ActorBase) SetReceiveTimeout(timeout time.Duration) {
+	p.Context().SetReceiveTimeout(timeout)
 }
