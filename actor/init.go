@@ -5,5 +5,5 @@ import (
 )
 
 func init() {
-	class_loader.Default().Register((*LocalActorRefProvider)(nil), "LocalActorRefProvider")
+	class_loader.Default.Register((*LocalActorRefProvider)(nil), "LocalActorRefProvider")
 }

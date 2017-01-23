@@ -1,5 +1,10 @@
 package akka
 
+import (
+	"strconv"
+	"strings"
+)
+
 var (
 	_ ActorPath = (*ChildActorPath)(nil)
 )
@@ -9,18 +14,25 @@ func ActorPathFromString(path string) (actorPath ActorPath, err error) {
 }
 
 type ChildActorPath struct {
-	uid int
+	parent ActorPath
+	name   string
+	uid    int
 }
 
-func NewChildActorPath(parent ActorPath, name string) (path ActorPath, err error) {
-	return
+func NewChildActorPath(parent ActorPath, name string, uid int) ActorPath {
+
+	return &ChildActorPath{
+		parent: parent,
+		name:   name,
+		uid:    uid,
+	}
 }
 
 func (p *ChildActorPath) Uid() int {
 	return p.uid
 }
 
-func (p *ChildActorPath) Address() (addr Address) {
+func (p *ChildActorPath) Address() (addr *Address) {
 	return
 }
 
@@ -36,12 +48,12 @@ func (p *ChildActorPath) Parent() (parent ActorPath) {
 	return
 }
 
-func (p *ChildActorPath) Root() (root RootActorPath) {
+func (p *ChildActorPath) Root() (root *RootActorPath) {
 	return
 }
 
-func (p *ChildActorPath) Equals(other ActorPath) bool {
-	return false
+func (p *ChildActorPath) CompareTo(other ActorPath) int {
+	return 0
 }
 
 func (p *ChildActorPath) ToSerializationFormat() string {
@@ -56,6 +68,23 @@ func (p *ChildActorPath) ToStringWithAddress(address Address) string {
 	return ""
 }
 
+func (p *ChildActorPath) splitNameAndUid(name string) (n string, uid int) {
+	i := strings.Index(name, "#")
+	if i < 0 {
+		n = name
+		return
+	}
+
+	n = name[0:i]
+	uid, _ = strconv.Atoi(name[i+1:])
+	return
+}
+
+func (p *ChildActorPath) Append(name string) ActorPath {
+	childName, uid := p.splitNameAndUid(name)
+	return NewChildActorPath(p, childName, uid)
+}
+
 func (p *ChildActorPath) ToStringWithoutAddress() string {
 	return ""
 }
@@ -66,4 +95,8 @@ func (p *ChildActorPath) Child(child string) (path ActorPath, err error) {
 
 func (p *ChildActorPath) Descendant(names []string) (path ActorPath, err error) {
 	return
+}
+
+func (p *ChildActorPath) String() string {
+	return ""
 }

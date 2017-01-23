@@ -2,24 +2,64 @@ package actor
 
 import (
 	"github.com/go-akka/akka"
+	"github.com/go-akka/akka/pkg/dynamic_access"
+	"sync"
+)
+
+var (
+	_ akka.ActorRefProvider = (*LocalActorRefProvider)(nil)
 )
 
 type LocalActorRefProvider struct {
-	settings   akka.Settings
-	eventStrem akka.EventStream
-	deployer   akka.Deployer
+	systemName    string
+	system        *ActorSystemImpl
+	settings      *akka.Settings
+	eventStrem    akka.EventStream
+	deployer      akka.Deployer
+	dynamicAccess dynamic_access.DynamicAccess
+
+	defualtDispatcher akka.MessageDispatcher
+	defaultMailbox    akka.MailboxType
+
+	rootPath     akka.ActorPath
+	rootGuardian akka.LocalActorRef
+
+	constructOnce sync.Once
 }
 
-func NewLocalActorRefProvider(systemName string,
-	settings akka.Settings,
+func (p *LocalActorRefProvider) Construct(
+	systemName string,
+	settings *akka.Settings,
 	eventStrem akka.EventStream,
-	deployer akka.Deployer,
-) akka.ActorRefProvider {
-	return &LocalActorRefProvider{
-		settings:   settings,
-		eventStrem: eventStrem,
-		deployer:   deployer,
+	dynamicAccess dynamic_access.DynamicAccess) {
+
+	p.constructOnce.Do(func() {
+		p.systemName = systemName
+		p.settings = settings
+		p.eventStrem = eventStrem
+		p.dynamicAccess = dynamicAccess
+	})
+}
+
+func (p *LocalActorRefProvider) Init(system akka.ActorSystem) (err error) {
+	p.system = system.(*ActorSystemImpl)
+
+	p.rootPath = akka.NewRootActorPath(akka.NewAddress("akka", p.systemName, "", 0), "/")
+
+	var props akka.Props
+	props, err = Props.Create((*RootGuardianActor)(nil), nil)
+	if err != nil {
+		return
 	}
+
+	p.rootGuardian = NewLocalActorRef(system, props, p.defualtDispatcher, p.defaultMailbox, nil, p.rootPath)
+
+	cell := p.rootGuardian.Underlying().(*ActorCell)
+	ref := NewLocalActorRef(system, props, p.defualtDispatcher, p.defaultMailbox, p.rootGuardian, p.rootPath.Append("user"))
+
+	cell.InitChild(ref)
+	ref.Start()
+	return
 }
 
 func (p *LocalActorRefProvider) ActorOf(
@@ -33,10 +73,6 @@ func (p *LocalActorRefProvider) ActorOf(
 	async bool) akka.InternalActorRef {
 	// dispitcher := akka.MessageDispatcher{}
 	return NewLocalActorRef(system, props, nil, nil, supervisor, path)
-}
-
-func (p *LocalActorRefProvider) Init(system akka.ActorSystem) {
-	return
 }
 
 func (p *LocalActorRefProvider) DeadLetters() akka.ActorRef {
@@ -68,7 +104,7 @@ func (p *LocalActorRefProvider) ResolveActorRef(path akka.ActorPath) akka.ActorR
 }
 
 func (p *LocalActorRefProvider) RootGuardian() akka.InternalActorRef {
-	return nil
+	return p.rootGuardian
 }
 
 func (p *LocalActorRefProvider) RootGuardianAt(address akka.Address) akka.ActorRef {
@@ -79,7 +115,7 @@ func (p *LocalActorRefProvider) RootPath() akka.ActorPath {
 	return nil
 }
 
-func (p *LocalActorRefProvider) Settings() akka.Settings {
+func (p *LocalActorRefProvider) Settings() *akka.Settings {
 	return p.settings
 }
 
@@ -101,4 +137,8 @@ func (p *LocalActorRefProvider) TerminationFuture() {
 
 func (p *LocalActorRefProvider) UnregisterTempActor(path akka.ActorPath) {
 	return
+}
+
+func (p *LocalActorRefProvider) createRootGuardian() {
+
 }

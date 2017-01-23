@@ -34,7 +34,7 @@ type ActorSystemImpl struct {
 }
 
 func AkkaClassLoader() class_loader.ClassLoader {
-	return class_loader.Default()
+	return class_loader.Default
 }
 
 func NewActorSystem(name string, config ...*configuration.Config) (system *ActorSystemImpl, err error) {
@@ -43,7 +43,7 @@ func NewActorSystem(name string, config ...*configuration.Config) (system *Actor
 		return
 	}
 
-	classLoader := class_loader.NewClassicClassLoader(class_loader.Default())
+	classLoader := class_loader.NewClassicClassLoader(class_loader.Default)
 
 	sys := &ActorSystemImpl{
 		name:          name,
@@ -74,6 +74,8 @@ func NewActorSystem(name string, config ...*configuration.Config) (system *Actor
 	// sys.configureDispatchers()
 
 	system = sys
+
+	err = system.Start()
 
 	return
 }
@@ -138,7 +140,7 @@ func (p *ActorSystemImpl) Equals(that interface{}) bool {
 	switch other := that.(type) {
 	case akka.ActorPath:
 		{
-			return p.path.Equals(other)
+			return p.path.CompareTo(other) == 0
 		}
 	}
 	return false
@@ -166,10 +168,6 @@ func (p *ActorSystemImpl) Stop(actor akka.ActorRef) (err error) {
 
 func (p *ActorSystemImpl) ActorSelection(path akka.ActorPath) (selection akka.ActorSelection, err error) {
 	return
-}
-
-func (p *ActorSystemImpl) Provider() akka.ActorRefProvider {
-	return nil
 }
 
 func (p *ActorSystemImpl) createDynamicAccess() dynamic_access.DynamicAccess {
@@ -224,7 +222,7 @@ func (p *ActorSystemImpl) configureScheduler() (err error) {
 
 func (p *ActorSystemImpl) configureProvider() (err error) {
 	var obj interface{}
-	if obj, err = p.dynamicAccess.CreateInstanceByName(p.settings.ProviderClass, p); err != nil {
+	if obj, err = p.dynamicAccess.CreateInstanceByName(p.settings.ProviderClass, p.name, p.settings, p.eventStream, p.dynamicAccess); err != nil {
 		return
 	}
 
@@ -244,5 +242,12 @@ func (p *ActorSystemImpl) configureMailboxes() (err error) {
 }
 
 func (p *ActorSystemImpl) configureDispatchers() {
+	return
+}
+
+func (p *ActorSystemImpl) Start() (err error) {
+	if err = p.provider.Init(p); err != nil {
+		return
+	}
 	return
 }

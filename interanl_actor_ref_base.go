@@ -9,16 +9,16 @@ func (p *InternalActorRefBase) Path() (path ActorPath) {
 	return
 }
 
-func (p *InternalActorRefBase) Tell(message interface{}, sender ActorRef) {
-	return
+func (p *InternalActorRefBase) Tell(message interface{}, sender ...ActorRef) error {
+	return nil
 }
 
 func (p *InternalActorRefBase) Forward(message interface{}) {
 	return
 }
 
-func (p *InternalActorRefBase) Equals(that interface{}) bool {
-	return false
+func (p *InternalActorRefBase) CompareTo(other ActorRef) int {
+	return 0
 }
 
 func (p *InternalActorRefBase) String() string {

@@ -5,7 +5,7 @@ import (
 )
 
 type CanTell interface {
-	Tell(message interface{}, sender ActorRef)
+	Tell(message interface{}, sender ...ActorRef) error
 }
 
 type TimeProvider interface {

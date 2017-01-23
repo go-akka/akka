@@ -8,7 +8,7 @@ type Cell interface {
 
 	Start()
 	Suspend()
-	Resume(err error)
+	Resume(causedByFailure error)
 	Restart(err error)
 	Stop() (err error)
 

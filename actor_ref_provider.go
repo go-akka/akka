@@ -16,7 +16,7 @@ type ActorRefProvider interface {
 	DefaultAddress() Address
 	ExternalAddressFor(addr Address) Address
 	Guardian() LocalActorRef
-	Init(system ActorSystem)
+	Init(system ActorSystem) error
 
 	RegisterTempActor(actorRef InternalActorRef, path ActorPath)
 	ResolveActorRef(path ActorPath) ActorRef
@@ -24,7 +24,7 @@ type ActorRefProvider interface {
 	RootGuardian() InternalActorRef
 	RootGuardianAt(address Address) ActorRef
 	RootPath() ActorPath
-	Settings() Settings
+	Settings() *Settings
 
 	SystemGuardian() LocalActorRef
 	TempContainer() InternalActorRef

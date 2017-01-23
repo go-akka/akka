@@ -42,7 +42,7 @@ func (p *ReflectiveDynamicAccess) CreateInstanceByType(typ reflect.Type, args ..
 		return
 	}
 
-	if err = p.initInstance(typVal, args...); err != nil {
+	if err = p.constructInstance(typVal, args...); err != nil {
 		return
 	}
 
@@ -62,20 +62,21 @@ func (p *ReflectiveDynamicAccess) CreateInstanceByName(name string, args ...inte
 	return
 }
 
-func (p *ReflectiveDynamicAccess) initInstance(val reflect.Value, args ...interface{}) (err error) {
+func (p *ReflectiveDynamicAccess) constructInstance(val reflect.Value, args ...interface{}) (err error) {
 
-	methodVal := val.MethodByName("Init")
+	methodVal := val.MethodByName("Construct")
 
 	if !methodVal.IsValid() {
 		return
 	}
 
-	if methodVal.Type().NumOut() > 1 {
+	numOut := methodVal.Type().NumOut()
+	if numOut > 1 {
 		err = ErrBadActorInitFuncOutNumber
 		return
 	}
 
-	if methodVal.Type().Out(0) != errorType {
+	if numOut == 1 && methodVal.Type().Out(0) != errorType {
 		err = ErrBadActorInitFuncOutType
 		return
 	}

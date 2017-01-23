@@ -52,7 +52,7 @@ func (p *SystemGuardianActor) Receive(message interface{}) (unhandled bool) {
 	case *akka.Terminated:
 		{
 			terminatedActor := msg.Actor()
-			if p.userGuardian.Equals(terminatedActor) {
+			if p.userGuardian.CompareTo(terminatedActor) != 0 {
 				p.Context().Become(p.Terminating, true)
 
 				for terminationHook, _ := range p.terminationHooks {

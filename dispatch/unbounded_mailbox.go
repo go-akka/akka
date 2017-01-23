@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	class_loader.Default().Register((*UnboundedMailbox)(nil), "akka.dispatch.unbounded-mailbox")
+	class_loader.Default.Register((*UnboundedMailbox)(nil), "akka.dispatch.unbounded-mailbox")
 }
 
 type UnboundedMailbox struct {

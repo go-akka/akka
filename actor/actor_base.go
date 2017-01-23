@@ -21,7 +21,7 @@ type ActorBase struct {
 func NewActorBase(receive akka.ReceiveFunc) *ActorBase {
 	actorBase := &ActorBase{
 		receive: receive,
-		ctx:     NewActorCell(nil, nil, nil, nil, nil, nil, nil),
+		ctx:     newActorCell(nil, nil, nil, nil, nil, nil, nil),
 	}
 
 	actorBase.Become(receive, true)

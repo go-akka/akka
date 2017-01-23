@@ -35,7 +35,7 @@ func (p *EventStream) PublishToSubscriber(event interface{}, subscriber interfac
 		return
 	}
 
-	sub.Tell(event, (*akka.NoSender)(nil))
+	sub.Tell(event)
 }
 
 func (p *EventStream) GetClassifier(event interface{}) interface{} {

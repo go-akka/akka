@@ -11,9 +11,9 @@ var (
 	ErrBadClassLoaderParentChain = errors.New("bad class loader parent chain")
 )
 
-func Default() ClassLoader {
-	return NewClassicClassLoader(nil)
-}
+var (
+	Default = NewClassicClassLoader(nil)
+)
 
 type ClassLoader interface {
 	Register(v interface{}, name string)

@@ -14,9 +14,10 @@ var (
 type ActorCell struct {
 	self       akka.InternalActorRef
 	props      akka.Props
-	system     akka.ActorSystem
 	parent     akka.InternalActorRef
 	dispitcher akka.MessageDispatcher
+
+	system *ActorSystemImpl
 
 	currentMsg interface{}
 	mailbox    akka.Mailbox
@@ -28,8 +29,8 @@ type ActorCell struct {
 	IDispatch
 }
 
-func NewActorCell(
-	system akka.ActorSystem,
+func newActorCell(
+	system *ActorSystemImpl,
 	self akka.InternalActorRef,
 	props akka.Props,
 	dispatcher akka.MessageDispatcher,
@@ -86,11 +87,11 @@ func (p *ActorCell) Suspend() {
 	return
 }
 
-func (p *ActorCell) Resume(err error) {
+func (p *ActorCell) Resume(causedByFailure error) {
 	return
 }
 
-func (p *ActorCell) Restart(err error) {
+func (p *ActorCell) Restart(cause error) {
 	return
 }
 
@@ -110,6 +111,10 @@ func (p *ActorCell) Props() akka.Props {
 	return p.props
 }
 
+func (p *ActorCell) Provider() akka.ActorRefProvider {
+	return p.system.provider
+}
+
 func (p *ActorCell) HasMessages() bool {
 	return false
 }
@@ -119,6 +124,10 @@ func (p *ActorCell) NumberOfMessages() int {
 }
 
 func (p *ActorCell) SendMessage(msg akka.Envelope) (err error) {
+	return
+}
+
+func (p *ActorCell) SendSystemMessage(msg akka.SystemMessage) (err error) {
 	return
 }
 

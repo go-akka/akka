@@ -8,7 +8,7 @@ type InternalActorRef interface {
 
 	String() string
 	Parent() InternalActorRef
-	Child(names ...string) InternalActorRef
+	GetChild(names ...string) InternalActorRef
 
 	Start()
 	Resume(err error)
