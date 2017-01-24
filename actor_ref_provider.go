@@ -7,7 +7,7 @@ type ActorRefProvider interface {
 		supervisor InternalActorRef,
 		path ActorPath,
 		systemService bool,
-		deploy Deploy,
+		deploy *Deploy,
 		lookupDeploy bool,
 		async bool) InternalActorRef
 

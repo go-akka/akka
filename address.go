@@ -12,8 +12,13 @@ type Address struct {
 	protocol string
 }
 
-func NewAddress(protocol string, system string, host string, port int) *Address {
-	return &Address{}
+func NewAddress(protocol string, system string, host string, port int) Address {
+	return Address{
+		protocol: protocol,
+		system:   system,
+		host:     host,
+		port:     port,
+	}
 }
 
 func (p *Address) Host() string {

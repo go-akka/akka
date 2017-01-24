@@ -18,9 +18,7 @@ const (
 )
 
 type Mailbox struct {
-	actor akka.Cell
-
-	invoker akka.MessageInvoker
+	actor akka.ActorCell
 
 	messageQueue akka.MessageQueue
 	dispatcher   akka.MessageDispatcher
@@ -32,15 +30,16 @@ type Mailbox struct {
 	status int32
 }
 
-func NewMailbox(messageQueue akka.MessageQueue) akka.Mailbox {
+func newMailbox(messageQueue akka.MessageQueue) akka.Mailbox {
 	return &Mailbox{
 		messageQueue:  messageQueue,
 		systemMailbox: lfqueue.NewLockfreeQueue(),
 	}
 }
 
-func (p *Mailbox) SetActor(actor akka.Cell) {
+func (p *Mailbox) SetActor(actor akka.ActorCell) {
 	p.actor = actor
+
 }
 
 func (p *Mailbox) Dispatcher() akka.MessageDispatcher {
@@ -55,6 +54,11 @@ func (p *Mailbox) Enqueue(receiver akka.ActorRef, envelope akka.Envelope) (err e
 	return p.messageQueue.Enqueue(receiver, envelope)
 }
 
+func (p *Mailbox) SystemEnqueue(receiver akka.ActorRef, message akka.SystemMessage) (err error) {
+	p.systemMailbox.Push(message)
+	return
+}
+
 func (p *Mailbox) Dequeue() (envelope akka.Envelope, ok bool) {
 	return p.messageQueue.Dequeue()
 }
@@ -65,6 +69,10 @@ func (p *Mailbox) NumberOfMessages() int {
 
 func (p *Mailbox) HasMessages() bool {
 	return p.messageQueue.HasMessages()
+}
+
+func (p *Mailbox) HasSystemMessages() bool {
+	return !p.systemMailbox.IsEmpty()
 }
 
 func (p *Mailbox) CleanUp(owner akka.ActorRef, deadLetters akka.MessageQueue) (err error) {
@@ -78,19 +86,45 @@ func (p *Mailbox) CleanUp(owner akka.ActorRef, deadLetters akka.MessageQueue) (e
 
 func (p *Mailbox) Run() {
 	defer func() {
-		p.setAsIdle()
+		p.SetAsIdle()
 		p.Dispatcher().RegisterForExecution(p, false, false)
 	}()
 
-	if !p.isClosed() {
+	if !p.IsClosed() {
 		p.processAllSystemMessages()
 		//TODO: add timeout
 		p.processMailbox(p.max(1, p.Dispatcher().Throughput()))
 	}
 }
 
-func (p *Mailbox) processAllSystemMessages() {
+func (p *Mailbox) IsClosed() bool {
+	return p.currentStatus() == MailboxStatusClosed
+}
 
+func (p *Mailbox) CanBeScheduledForExecution(hasMessageHint bool, hasSystemMessageHint bool) bool {
+	switch p.currentStatus() {
+	case MailboxStatusOpen, MailboxStatusScheduled:
+		{
+			return hasMessageHint || hasSystemMessageHint || p.HasSystemMessages() || p.HasMessages()
+		}
+	case MailboxStatusClosed:
+		{
+			return false
+		}
+	default:
+		return hasSystemMessageHint || p.HasSystemMessages()
+	}
+}
+
+func (p *Mailbox) processAllSystemMessages() {
+	for !p.systemMailbox.IsEmpty() {
+		msg := p.systemMailbox.Pop().(akka.SystemMessage)
+		if msg != nil {
+			p.actor.SystemInvoke(msg)
+			continue
+		}
+		return
+	}
 	return
 }
 
@@ -102,7 +136,7 @@ func (p *Mailbox) processMailbox(left int) {
 			return
 		}
 
-		p.invoker.Invoke(next)
+		p.actor.Invoke(next)
 		p.processAllSystemMessages()
 
 		if left > 1 {
@@ -134,10 +168,6 @@ func (p *Mailbox) shouldProcessMessage() bool {
 
 func (p *Mailbox) isSuspended() bool {
 	return (p.currentStatus() & MailboxStatusSuspendMask) != 0
-}
-
-func (p *Mailbox) isClosed() bool {
-	return p.currentStatus() == MailboxStatusClosed
 }
 
 func (p *Mailbox) isScheduled() bool {
@@ -187,10 +217,22 @@ func (p *Mailbox) becomeClosed() bool {
 	return p.updateStatus(status, MailboxStatusClosed) || p.becomeClosed()
 }
 
-func (p *Mailbox) setAsIdle() bool {
+func (p *Mailbox) SetAsIdle() bool {
 	for {
 		status := p.currentStatus()
 		if p.updateStatus(status, status&^MailboxStatusScheduled) {
+			return true
+		}
+	}
+}
+
+func (p *Mailbox) SetAsScheduled() bool {
+	for {
+		status := p.currentStatus()
+		if status&MailboxStatusShouldScheduleMask != MailboxStatusOpen {
+			return false
+		}
+		if p.updateStatus(status, status|MailboxStatusScheduled) {
 			return true
 		}
 	}

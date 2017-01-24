@@ -17,7 +17,7 @@ func NewUnboundedMailbox() akka.MailboxType {
 	return &UnboundedMailbox{}
 }
 
-func (p *UnboundedMailbox) Init(settings akka.Settings, config configuration.Config) (err error) {
+func (p *UnboundedMailbox) Init(settings *akka.Settings, config *configuration.Config) (err error) {
 	return
 }
 

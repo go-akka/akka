@@ -15,7 +15,13 @@ func (p *ActorCell) Invoke(msg akka.Envelope) (wasHandled bool, err error) {
 	}
 }
 
-func (p *ActorCell) SystemInvoke(msg akka.Envelope) (wasHandled bool, err error) {
+func (p *ActorCell) SystemInvoke(msg akka.SystemMessage) (wasHandled bool, err error) {
+	switch v := msg.(type) {
+	case *akka.Create:
+		{
+			p.create(v.Failure)
+		}
+	}
 	return
 }
 
@@ -56,4 +62,21 @@ func (p *ActorCell) AutoReceiveMessage(msg akka.Envelope) (wasHandled bool, err 
 		}
 	}
 	return
+}
+
+func (p *ActorCell) create(failure error) {
+
+	if failure != nil {
+		panic(failure)
+	}
+
+	created, err := p.props.NewActor()
+
+	if err != nil {
+		panic(err)
+	}
+
+	p.actor = created.(*ActorBase)
+	p.actor.ctx = p
+	p.actor.Become(p.actor.receive, false)
 }

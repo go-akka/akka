@@ -11,10 +11,11 @@ var (
 
 type RootActorPath struct {
 	name    string
-	address *Address
+	address Address
 }
 
-func NewRootActorPath(address *Address, name string) ActorPath {
+func NewRootActorPath(address Address, name string) ActorPath {
+
 	if len(name) == 0 {
 		name = "/"
 	}
@@ -25,11 +26,11 @@ func NewRootActorPath(address *Address, name string) ActorPath {
 	}
 }
 
-func (p *RootActorPath) Uid() int {
+func (p *RootActorPath) Uid() int64 {
 	return 0
 }
 
-func (p *RootActorPath) Address() (addr *Address) {
+func (p *RootActorPath) Address() (addr Address) {
 	return p.address
 }
 
@@ -45,7 +46,7 @@ func (p *RootActorPath) Parent() (parent ActorPath) {
 	return
 }
 
-func (p *RootActorPath) Root() (root *RootActorPath) {
+func (p *RootActorPath) Root() (root RootActorPath) {
 	return
 }
 
@@ -77,7 +78,7 @@ func (p *RootActorPath) Descendant(names []string) (path ActorPath, err error) {
 	return
 }
 
-func (p *RootActorPath) splitNameAndUid(name string) (n string, uid int) {
+func (p *RootActorPath) splitNameAndUid(name string) (n string, uid int64) {
 	i := strings.Index(name, "#")
 	if i < 0 {
 		n = name
@@ -85,7 +86,8 @@ func (p *RootActorPath) splitNameAndUid(name string) (n string, uid int) {
 	}
 
 	n = name[0:i]
-	uid, _ = strconv.Atoi(name[i+1:])
+	v, _ := strconv.Atoi(name[i+1:])
+	uid = int64(v)
 	return
 }
 
@@ -95,5 +97,5 @@ func (p *RootActorPath) Append(name string) ActorPath {
 }
 
 func (p *RootActorPath) String() string {
-	return p.Address().String() + p.name
+	return p.address.String() + p.name
 }

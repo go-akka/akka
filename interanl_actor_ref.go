@@ -15,4 +15,6 @@ type InternalActorRef interface {
 	Suspend()
 	Restart(err error)
 	Stop()
+
+	SendSystemMessage(message SystemMessage) error
 }

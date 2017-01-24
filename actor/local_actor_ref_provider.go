@@ -2,6 +2,7 @@ package actor
 
 import (
 	"github.com/go-akka/akka"
+	"github.com/go-akka/akka/dispatch"
 	"github.com/go-akka/akka/pkg/dynamic_access"
 	"sync"
 )
@@ -18,11 +19,13 @@ type LocalActorRefProvider struct {
 	deployer      akka.Deployer
 	dynamicAccess dynamic_access.DynamicAccess
 
-	defualtDispatcher akka.MessageDispatcher
+	defaultDispatcher akka.MessageDispatcher
 	defaultMailbox    akka.MailboxType
 
-	rootPath     akka.ActorPath
-	rootGuardian akka.LocalActorRef
+	rootPath       akka.ActorPath
+	rootGuardian   akka.LocalActorRef
+	guardian       akka.LocalActorRef
+	systemGuardian akka.LocalActorRef
 
 	constructOnce sync.Once
 }
@@ -43,6 +46,8 @@ func (p *LocalActorRefProvider) Construct(
 
 func (p *LocalActorRefProvider) Init(system akka.ActorSystem) (err error) {
 	p.system = system.(*ActorSystemImpl)
+	p.defaultDispatcher = p.system.dispatchers.Lookup(dispatch.DefaultDispatcherId)
+	p.defaultMailbox, _ = p.system.mailboxes.Lookup(dispatch.DefaultMailboxId)
 
 	p.rootPath = akka.NewRootActorPath(akka.NewAddress("akka", p.systemName, "", 0), "/")
 
@@ -52,13 +57,18 @@ func (p *LocalActorRefProvider) Init(system akka.ActorSystem) (err error) {
 		return
 	}
 
-	p.rootGuardian = NewLocalActorRef(system, props, p.defualtDispatcher, p.defaultMailbox, nil, p.rootPath)
+	theOneWhoWalksTheBubblesOfSpaceTime := NewBubbleWalker(p.rootPath.Append("bubble-walker"), p)
+
+	p.rootGuardian = NewLocalActorRef(system, props, p.defaultDispatcher, p.defaultMailbox, theOneWhoWalksTheBubblesOfSpaceTime, p.rootPath)
 
 	cell := p.rootGuardian.Underlying().(*ActorCell)
-	ref := NewLocalActorRef(system, props, p.defualtDispatcher, p.defaultMailbox, p.rootGuardian, p.rootPath.Append("user"))
+	ref := NewLocalActorRef(system, props, p.defaultDispatcher, p.defaultMailbox, p.rootGuardian, p.rootPath.Append("user"))
 
 	cell.InitChild(ref)
 	ref.Start()
+
+	p.guardian = ref
+
 	return
 }
 
@@ -68,11 +78,17 @@ func (p *LocalActorRefProvider) ActorOf(
 	supervisor akka.InternalActorRef,
 	path akka.ActorPath,
 	systemService bool,
-	deploy akka.Deploy,
+	deploy *akka.Deploy,
 	lookupDeploy bool,
 	async bool) akka.InternalActorRef {
+
+	sys := system.(*ActorSystemImpl)
+
+	dispatcher := sys.dispatchers.Lookup(props.Dispatcher())
+	mailboxType, _ := sys.mailboxes.Lookup(props.Mailbox())
+
 	// dispitcher := akka.MessageDispatcher{}
-	return NewLocalActorRef(system, props, nil, nil, supervisor, path)
+	return NewLocalActorRef(sys, props, dispatcher, mailboxType, supervisor, path)
 }
 
 func (p *LocalActorRefProvider) DeadLetters() akka.ActorRef {
@@ -92,7 +108,11 @@ func (p *LocalActorRefProvider) ExternalAddressFor(addr akka.Address) akka.Addre
 }
 
 func (p *LocalActorRefProvider) Guardian() akka.LocalActorRef {
-	return nil
+	return p.guardian
+}
+
+func (p *LocalActorRefProvider) SystemGuardian() akka.LocalActorRef {
+	return p.systemGuardian
 }
 
 func (p *LocalActorRefProvider) RegisterTempActor(actorRef akka.InternalActorRef, path akka.ActorPath) {
@@ -117,10 +137,6 @@ func (p *LocalActorRefProvider) RootPath() akka.ActorPath {
 
 func (p *LocalActorRefProvider) Settings() *akka.Settings {
 	return p.settings
-}
-
-func (p *LocalActorRefProvider) SystemGuardian() akka.LocalActorRef {
-	return nil
 }
 
 func (p *LocalActorRefProvider) TempContainer() akka.InternalActorRef {

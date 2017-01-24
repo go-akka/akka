@@ -2,6 +2,8 @@ package actor
 
 import (
 	"github.com/go-akka/akka"
+	"github.com/go-akka/akka/dispatch"
+	"sync"
 )
 
 type IDispatch interface {
@@ -19,37 +21,67 @@ var (
 )
 
 type ActorCellDispatch struct {
-	cell *ActorCell
+	*ActorCell
+
+	mailboxLocker sync.Mutex
 }
 
-func NewActorCellDispatch(cell *ActorCell) IDispatch {
-	return &ActorCellDispatch{cell: cell}
+func newActorCellDispatch(cell *ActorCell) IDispatch {
+	return &ActorCellDispatch{ActorCell: cell}
 }
 
 func (p *ActorCellDispatch) Init(sendSupervise bool, mailboxType akka.MailboxType) {
+
+	mbox := p.Dispatcher().CreateMailbox(p, mailboxType)
+
+	p.swapMailbox(mbox)
+	p.mailbox.SetActor(p)
+
+	createMessage := &akka.Create{}
+	p.mailbox.SystemEnqueue(p.Self(), createMessage)
+
+	if sendSupervise {
+		p.parent.SendSystemMessage(&akka.Supervise{p.Self(), false})
+	}
+
 	return
 }
 
 func (p *ActorCellDispatch) InitWithFailure(err error) {
+	mbox := p.Dispatcher().CreateMailbox(p, dispatch.NewUnboundedMailbox())
+
+	p.swapMailbox(mbox)
+	p.mailbox.SetActor(p)
+
+	createMessage := &akka.Create{}
+	p.mailbox.SystemEnqueue(p.Self(), createMessage)
+
 	return
 }
 
 func (p *ActorCellDispatch) Mailbox() (mailbox akka.Mailbox) {
-	return
+	return p.mailbox
 }
 
 func (p *ActorCellDispatch) HasMessages() (has bool) {
-	return
+	return p.mailbox.HasMessages()
 }
 
 func (p *ActorCellDispatch) NumberOfMessages() int {
-	return 0
+	return p.mailbox.NumberOfMessages()
 }
 
 func (p *ActorCellDispatch) IsTerminated() (yes bool) {
-	return
+	return p.mailbox.IsClosed()
 }
 
 func (p *ActorCellDispatch) Start() {
-	return
+	p.dispitcher.Attach(p)
+}
+
+func (p *ActorCellDispatch) swapMailbox(mailbox akka.Mailbox) {
+	p.mailboxLocker.Lock()
+	defer p.mailboxLocker.Unlock()
+
+	p.mailbox = mailbox
 }

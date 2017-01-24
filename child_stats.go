@@ -21,7 +21,7 @@ func ChildNameReserved() *ChildStats {
 }
 
 type ChildRestartStats struct {
-	uid int
+	uid int64
 
 	maxNrOfRetriesCount         int
 	restartTimeWindowStartNanos int

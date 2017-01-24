@@ -28,6 +28,7 @@ type ActorSystemImpl struct {
 	scheduler     akka.Scheduler
 	mailboxes     akka.Mailboxes
 	deadletters   akka.ActorRef
+	dispatchers   akka.Dispatchers
 
 	provider   akka.ActorRefProvider
 	lookupRoot akka.InternalActorRef
@@ -71,7 +72,7 @@ func NewActorSystem(name string, config ...*configuration.Config) (system *Actor
 	sys.configureProvider()
 	// sys.configureTerminationCallbacks()
 	sys.configureMailboxes()
-	// sys.configureDispatchers()
+	sys.configureDispatchers()
 
 	system = sys
 
@@ -242,7 +243,7 @@ func (p *ActorSystemImpl) configureMailboxes() (err error) {
 }
 
 func (p *ActorSystemImpl) configureDispatchers() {
-	return
+	p.dispatchers = dispatch.NewDispatchers(p.settings, dispatch.NewDefaultDispatcherPrerequisites(p.eventStream, p.scheduler, p.dynamicAccess, p.settings, p.mailboxes))
 }
 
 func (p *ActorSystemImpl) Start() (err error) {

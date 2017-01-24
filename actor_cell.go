@@ -1,7 +1,10 @@
 package akka
 
-// type ActorCell interface {
-// 	Self() ActorRef
-// 	Dispatcher() MessageDispatcher
-// 	Invoke(envelop Envelope) error
-// }
+type ActorCell interface {
+	Self() ActorRef
+	Mailbox() Mailbox
+
+	SystemInvoke(message SystemMessage) (wasHandled bool, err error)
+	Invoke(envelop Envelope) (wasHandled bool, err error)
+	Dispatcher() MessageDispatcher
+}

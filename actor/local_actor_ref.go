@@ -40,7 +40,7 @@ func NewLocalActorRef(
 		path:        path,
 	}
 
-	actorCell := newActorCell(sysImpl, ref, props, dispatcher, supervisor, nil, nil)
+	actorCell := newActorCell(sysImpl, ref, props, dispatcher, supervisor)
 
 	actorCell.Init(true, mailboxType)
 
@@ -61,7 +61,7 @@ func (p *LocalActorRef) Tell(message interface{}, sender ...akka.ActorRef) error
 }
 
 func (p *LocalActorRef) Path() akka.ActorPath {
-	return nil
+	return p.path
 }
 
 func (p *LocalActorRef) CompareTo(other akka.ActorRef) int {
@@ -69,7 +69,7 @@ func (p *LocalActorRef) CompareTo(other akka.ActorRef) int {
 }
 
 func (p *LocalActorRef) String() string {
-	return "LocalActorRef"
+	return p.path.String()
 }
 
 func (p *LocalActorRef) Parent() akka.InternalActorRef {

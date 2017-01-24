@@ -1,12 +1,12 @@
 package akka
 
 type ActorPath interface {
-	Uid() int
-	Address() (addr *Address)
+	Uid() int64
+	Address() (addr Address)
 	Elements() (elems []string)
 	Name() (name string)
 	Parent() (parent ActorPath)
-	Root() (root *RootActorPath)
+	Root() (root RootActorPath)
 	CompareTo(other ActorPath) int
 	ToSerializationFormat() string
 	ToSerializationFormatWithAddress(address Address) string

@@ -2,6 +2,7 @@ package actor
 
 import (
 	"github.com/go-akka/akka"
+	"github.com/go-akka/akka/dispatch"
 )
 
 var (
@@ -23,22 +24,30 @@ func (p ActorProps) Create(v interface{}, args ...interface{}) (props akka.Props
 	}
 
 	props = &ActorProps{
-		producer: producer,
+		producer:   producer,
+		mailbox:    dispatch.DefaultMailboxId,
+		dispatcher: dispatch.DefaultDispatcherId,
 	}
 
 	return
 }
 
-func (p ActorProps) newActor() (actor akka.Actor, err error) {
+func (p ActorProps) NewActor() (actor akka.Actor, err error) {
 	actor, err = p.producer.Produce()
 	return
 }
 
 func (p ActorProps) Dispatcher() string {
+	if len(p.deploy.Dispatcher()) == 0 {
+		return dispatch.DefaultDispatcherId
+	}
 	return p.deploy.Dispatcher()
 }
 
 func (p ActorProps) Mailbox() string {
+	if len(p.deploy.Mailbox()) == 0 {
+		return dispatch.DefaultMailboxId
+	}
 	return p.deploy.Mailbox()
 }
 

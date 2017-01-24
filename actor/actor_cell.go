@@ -35,20 +35,21 @@ func newActorCell(
 	props akka.Props,
 	dispatcher akka.MessageDispatcher,
 	parent akka.InternalActorRef,
-	children IChildren,
-	dispatch IDispatch,
 ) *ActorCell {
 
-	return &ActorCell{
+	cell := &ActorCell{
 		self:          self,
 		system:        system,
 		props:         props,
 		dispitcher:    dispatcher,
 		parent:        parent,
 		behaviorStack: NewBehaviorStack(),
-		IChildren:     children,
-		IDispatch:     dispatch,
 	}
+
+	cell.IDispatch = newActorCellDispatch(cell)
+	cell.IChildren = newActorCellChildren(cell)
+
+	return cell
 }
 
 func (p *ActorCell) Dispatcher() akka.MessageDispatcher {
@@ -80,7 +81,7 @@ func (p *ActorCell) System() akka.ActorSystem {
 }
 
 func (p *ActorCell) Start() {
-	return
+	p.dispitcher.Attach(p)
 }
 
 func (p *ActorCell) Suspend() {
@@ -124,7 +125,7 @@ func (p *ActorCell) NumberOfMessages() int {
 }
 
 func (p *ActorCell) SendMessage(msg akka.Envelope) (err error) {
-	return
+	return p.dispitcher.Dispatch(p, msg)
 }
 
 func (p *ActorCell) SendSystemMessage(msg akka.SystemMessage) (err error) {

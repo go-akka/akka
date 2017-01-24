@@ -1,6 +1,7 @@
 package akka
 
 type Props interface {
+	NewActor() (actor Actor, err error)
 	Create(v interface{}, args ...interface{}) (props Props, err error)
 	Dispatcher() string
 	Mailbox() string

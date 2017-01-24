@@ -5,5 +5,9 @@ import (
 )
 
 type ExecutorServiceFactory interface {
-	Produce(id string) concurrent.ExecutorService
+	CreateExecutorService() concurrent.ExecutorService
+}
+
+type ExecutorServiceFactoryProvider interface {
+	CreateExecutorServiceFactory(id string) ExecutorServiceFactory
 }
