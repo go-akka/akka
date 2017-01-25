@@ -75,11 +75,11 @@ func (p *_ReflectProducer) Produce() (actor akka.Actor, err error) {
 	receiver := val.Interface().(akka.Receiver)
 
 	if p.baseType == unTypedActorPtrType {
-		untypedActor := NewUntypedActor(receiver.Receive)
+		untypedActor := NewUntypedActor(receiver)
 		combine(val, unTypedActorPtrType, untypedActor)
 		actor = untypedActor.ActorBase
 	} else if p.baseType == receiveActorPtrType {
-		receiveActor := NewReceiveActor()
+		receiveActor := NewReceiveActor(receiver)
 		combine(val, receiveActorPtrType, receiveActor)
 		actor = receiveActor.ActorBase
 	}

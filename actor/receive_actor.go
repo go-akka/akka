@@ -1,22 +1,22 @@
 package actor
 
 import (
+	"github.com/go-akka/akka"
 	"reflect"
 )
 
 type ReceiveActor struct {
 	*ActorBase
-
 	receiveFuns map[string]interface{}
 }
 
-func NewReceiveActor() *ReceiveActor {
+func NewReceiveActor(actor akka.Actor) *ReceiveActor {
 
 	receiveActor := &ReceiveActor{
 		receiveFuns: make(map[string]interface{}),
 	}
 
-	receiveActor.ActorBase = NewActorBase(receiveActor.Receive)
+	receiveActor.ActorBase = NewActorBase(receiveActor.Receive, actor)
 
 	return receiveActor
 }

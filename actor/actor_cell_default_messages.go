@@ -71,12 +71,18 @@ func (p *ActorCell) create(failure error) {
 	}
 
 	created, err := p.props.NewActor()
+	actor := created.(*ActorBase)
 
 	if err != nil {
 		panic(err)
 	}
 
-	p.actor = created.(*ActorBase)
+	p.actor = actor
 	p.actor.ctx = p
-	p.actor.Become(p.actor.receive, false)
+
+	if err = actor.AroundPreStart(); err != nil {
+		panic(err)
+	}
+
+	p.actor.Become(p.actor.Receive, false)
 }

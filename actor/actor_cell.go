@@ -160,14 +160,14 @@ func (p *ActorCell) Become(receive akka.ReceiveFunc, discardOld bool) (err error
 	if discardOld && p.behaviorStack.Len() > 0 {
 		p.behaviorStack.Pop()
 	}
-	p.behaviorStack.Push(receive)
+	p.behaviorStack.Push(p.actor.Receive)
 	return
 }
 
 func (p *ActorCell) Unbecome() {
 	p.behaviorStack.Pop()
 	if p.behaviorStack.Len() == 0 {
-		p.behaviorStack.Push(p.actor.receive)
+		p.behaviorStack.Push(p.actor.Receive)
 	}
 	return
 }

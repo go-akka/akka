@@ -11,3 +11,7 @@ type Actor interface {
 type AutoReceivedMessage interface {
 	AutoReceivedMessage()
 }
+
+type PreStarter interface {
+	PreStart() (err error)
+}

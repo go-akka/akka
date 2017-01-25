@@ -39,7 +39,7 @@ func (p *ActorCellChildren) Child(name string) (ref akka.ActorRef, exist bool) {
 }
 
 func (p *ActorCellChildren) ActorOf(props akka.Props, name string) (ref akka.ActorRef, err error) {
-	return
+	return p.makeChild(props, name, false, false)
 }
 
 func (p *ActorCellChildren) StopChild(actor akka.ActorRef) {

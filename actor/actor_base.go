@@ -13,14 +13,16 @@ type ActorBase struct {
 	clearedSelf    akka.ActorRef
 	hasBeenCleared bool
 
-	receive akka.ReceiveFunc
+	actor        akka.Actor
+	receiverFunc akka.ReceiveFunc
 
 	ctx akka.ActorContext
 }
 
-func NewActorBase(receive akka.ReceiveFunc) *ActorBase {
+func NewActorBase(receiverFunc akka.ReceiveFunc, actor akka.Actor) *ActorBase {
 	actorBase := &ActorBase{
-		receive: receive,
+		actor:        actor,
+		receiverFunc: receiverFunc,
 	}
 
 	return actorBase
@@ -47,7 +49,7 @@ func (p *ActorBase) AroundReceive(receiveFunc akka.ReceiveFunc, message interfac
 
 func (p *ActorBase) Receive(message interface{}) (wasHandled bool, err error) {
 
-	if wasHandled, err = p.receive(message); err != nil {
+	if wasHandled, err = p.receiverFunc(message); err != nil {
 		return
 	} else if !wasHandled {
 		err = p.Unhandled(message)
