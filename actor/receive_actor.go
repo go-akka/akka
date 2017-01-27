@@ -8,17 +8,29 @@ import (
 type ReceiveActor struct {
 	*ActorBase
 	receiveFuns map[string]interface{}
+	initFn      akka.InitFunc
 }
 
-func NewReceiveActor(actor akka.Actor) *ReceiveActor {
+func NewReceiveActor(actor akka.Actor, initFn akka.InitFunc) *ReceiveActor {
 
 	receiveActor := &ReceiveActor{
 		receiveFuns: make(map[string]interface{}),
 	}
 
-	receiveActor.ActorBase = NewActorBase(receiveActor.Receive, actor)
+	// receiveActor.ActorBase = NewActorBase(receiveActor.Receive, actor)
 
 	return receiveActor
+}
+
+func (p *ReceiveActor) Init() error {
+	if p.initFn != nil {
+		return p.initFn()
+	}
+	return nil
+}
+
+func (p *ReceiveActor) SetActorBase(actorBase *ActorBase) {
+	p.ActorBase = actorBase
 }
 
 func (p *ReceiveActor) Receive(message interface{}) (handled bool, err error) {

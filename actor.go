@@ -15,3 +15,9 @@ type AutoReceivedMessage interface {
 type PreStarter interface {
 	PreStart() (err error)
 }
+
+type Constructer interface {
+	Construct() error
+}
+
+type InitFunc func() error

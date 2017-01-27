@@ -71,14 +71,23 @@ func (p *ActorCell) create(failure error) {
 	}
 
 	created, err := p.props.NewActor()
-	actor := created.(*ActorBase)
+
+	actor := NewActorBase(created)
+	actor.ctx = p
+
+	if setter, ok := created.(actorBaseSetter); ok {
+		setter.SetActorBase(actor)
+	}
+
+	if constructer, ok := created.(akka.Constructer); ok {
+		constructer.Construct()
+	}
 
 	if err != nil {
 		panic(err)
 	}
 
 	p.actor = actor
-	p.actor.ctx = p
 
 	if err = actor.AroundPreStart(); err != nil {
 		panic(err)

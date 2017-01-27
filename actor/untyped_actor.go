@@ -6,18 +6,31 @@ import (
 
 type UntypedActor struct {
 	*ActorBase
-	actor akka.Actor
+	actor  akka.Actor
+	initFn akka.InitFunc
 }
 
-func NewUntypedActor(actor akka.Actor) *UntypedActor {
+func NewUntypedActor(actor akka.Actor, initFn akka.InitFunc) *UntypedActor {
 
 	untypedActor := &UntypedActor{
-		actor: actor,
+		actor:  actor,
+		initFn: initFn,
 	}
 
-	untypedActor.ActorBase = NewActorBase(untypedActor.Receive, actor)
+	// untypedActor.ActorBase = NewActorBase(untypedActor.Receive, actor)
 
 	return untypedActor
+}
+
+func (p *UntypedActor) Construct() error {
+	if p.initFn != nil {
+		return p.initFn()
+	}
+	return nil
+}
+
+func (p *UntypedActor) SetActorBase(actorBase *ActorBase) {
+	p.ActorBase = actorBase
 }
 
 func (p *UntypedActor) Receive(message interface{}) (handled bool, err error) {

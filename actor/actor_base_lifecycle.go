@@ -1,7 +1,6 @@
 package actor
 
 import (
-	"fmt"
 	"github.com/go-akka/akka"
 )
 
@@ -11,13 +10,8 @@ func (p *ActorBase) AroundPreReStart(cause error, message interface{}) {
 
 func (p *ActorBase) AroundPreStart() (err error) {
 	if preStarter, ok := p.actor.(akka.PreStarter); ok {
-		preStarter.PreStart()
+		return preStarter.PreStart()
 	}
-	return p.PreStart()
-}
-
-func (p *ActorBase) PreStart() (err error) {
-	fmt.Println("ActorBase.PreStart")
 	return
 }
 
@@ -34,7 +28,7 @@ func (p *ActorBase) PreRestart(cause error, message interface{}) {
 }
 
 func (p *ActorBase) PostRestart(cause error) {
-	p.PreStart()
+	// p.PreStart()
 }
 
 func (p *ActorBase) AroundPostStop() {

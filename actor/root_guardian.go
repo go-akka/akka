@@ -24,3 +24,7 @@ func (p *RootGuardianActor) Receive(message interface{}) (handled bool, err erro
 func (p *RootGuardianActor) PreRestart(cause error, message interface{}) {
 	return
 }
+
+func (p *RootGuardianActor) PreStart() (err error) {
+	return
+}

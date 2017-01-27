@@ -9,20 +9,22 @@ var emptyBehavior = func(_ interface{}) bool {
 	return false
 }
 
+type actorBaseSetter interface {
+	SetActorBase(actorBase *ActorBase)
+}
+
 type ActorBase struct {
 	clearedSelf    akka.ActorRef
 	hasBeenCleared bool
 
-	actor        akka.Actor
-	receiverFunc akka.ReceiveFunc
+	actor akka.Actor
 
 	ctx akka.ActorContext
 }
 
-func NewActorBase(receiverFunc akka.ReceiveFunc, actor akka.Actor) *ActorBase {
+func NewActorBase(actor akka.Actor) *ActorBase {
 	actorBase := &ActorBase{
-		actor:        actor,
-		receiverFunc: receiverFunc,
+		actor: actor,
 	}
 
 	return actorBase
@@ -49,7 +51,7 @@ func (p *ActorBase) AroundReceive(receiveFunc akka.ReceiveFunc, message interfac
 
 func (p *ActorBase) Receive(message interface{}) (wasHandled bool, err error) {
 
-	if wasHandled, err = p.receiverFunc(message); err != nil {
+	if wasHandled, err = p.actor.Receive(message); err != nil {
 		return
 	} else if !wasHandled {
 		err = p.Unhandled(message)

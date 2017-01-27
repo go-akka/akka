@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-akka/akka"
 	"reflect"
+	"strings"
 )
 
 type ActorBaseInitFunc func(instance interface{}) (err error)
@@ -74,18 +75,16 @@ func (p *_ReflectProducer) Produce() (actor akka.Actor, err error) {
 
 	receiver := val.Interface().(akka.Receiver)
 
-	if p.baseType == unTypedActorPtrType {
-		untypedActor := NewUntypedActor(receiver)
-		combine(val, unTypedActorPtrType, untypedActor)
-		actor = untypedActor.ActorBase
-	} else if p.baseType == receiveActorPtrType {
-		receiveActor := NewReceiveActor(receiver)
-		combine(val, receiveActorPtrType, receiveActor)
-		actor = receiveActor.ActorBase
-	}
+	initFunc := p.genInitFunc(val)
 
-	if err = initInstance(val, p.args...); err != nil {
-		return
+	if p.baseType == unTypedActorPtrType {
+		untypedActor := NewUntypedActor(receiver, initFunc)
+		combine(val, unTypedActorPtrType, untypedActor)
+		actor = receiver
+	} else if p.baseType == receiveActorPtrType {
+		receiveActor := NewReceiveActor(receiver, initFunc)
+		combine(val, receiveActorPtrType, receiveActor)
+		actor = receiver
 	}
 
 	return
@@ -95,9 +94,28 @@ func (p *_ReflectProducer) ActorType() reflect.Type {
 	return p.typ
 }
 
+func (p *_ReflectProducer) genInitFunc(val reflect.Value) akka.InitFunc {
+	return func() error {
+		return initInstance(val, p.args...)
+	}
+}
+
+func getTypeName(t reflect.Type) string {
+	s := t.String()
+	if len(s) == 0 {
+		return ""
+	}
+	return s[strings.LastIndex(s, ".")+1:]
+}
+
 func initInstance(val reflect.Value, args ...interface{}) (err error) {
 
-	methodVal := val.MethodByName("Init")
+	constructName := getTypeName(val.Type())
+	if len(constructName) == 0 {
+		return
+	}
+
+	methodVal := val.MethodByName(constructName)
 
 	if !methodVal.IsValid() {
 		return
