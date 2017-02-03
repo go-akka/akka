@@ -1,12 +1,13 @@
-package akka
+package actor
 
 import (
 	"fmt"
+	"github.com/go-akka/akka"
 )
 
 type Kill struct{}
 type PoisonPill struct{}
-type AddressTerminated struct{ Address Address }
+type AddressTerminated struct{ Address akka.Address }
 type ActorSelectionMessage struct{}
 type Identify struct{ MessageID interface{} }
 
@@ -36,7 +37,7 @@ func (p *Identify) String() string {
 }
 
 type Terminated struct {
-	Actor              ActorRef
+	Actor              akka.ActorRef
 	AddressTerminated  bool
 	ExistenceConfirmed bool
 }

@@ -20,7 +20,7 @@ type GuardianActor struct {
 func (p *GuardianActor) Receive(message interface{}) (unhandled bool) {
 
 	switch msg := message.(type) {
-	case *akka.Terminated:
+	case *Terminated:
 		{
 			p.Context().StopChild(p.Self())
 			return
@@ -50,7 +50,7 @@ type SystemGuardianActor struct {
 func (p *SystemGuardianActor) Receive(message interface{}) (unhandled bool) {
 
 	switch msg := message.(type) {
-	case *akka.Terminated:
+	case *Terminated:
 		{
 			terminatedActor := msg.Actor
 			if p.userGuardian.CompareTo(terminatedActor) != 0 {

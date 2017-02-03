@@ -8,10 +8,6 @@ type Actor interface {
 	Receiver
 }
 
-type AutoReceivedMessage interface {
-	AutoReceivedMessage()
-}
-
 type PreStarter interface {
 	PreStart() (err error)
 }

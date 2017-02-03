@@ -72,7 +72,7 @@ func (p *ActorBase) Receive(message interface{}) (wasHandled bool, err error) {
 }
 
 func (p *ActorBase) Unhandled(message interface{}) (err error) {
-	if terminatedMessage, ok := message.(*akka.Terminated); ok {
+	if terminatedMessage, ok := message.(*Terminated); ok {
 		p.Context().System().EventStream().Publish(&akka.UnhandledMessage{terminatedMessage, p.Sender(), p.Self()})
 	}
 

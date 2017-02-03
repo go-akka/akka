@@ -15,7 +15,7 @@ func (p *RootGuardianActor) Construct(supervisorStrategy akka.SupervisorStrategy
 
 func (p *RootGuardianActor) Receive(message interface{}) (handled bool, err error) {
 	switch message.(type) {
-	case *akka.Terminated:
+	case *Terminated:
 	case *sysmsg.StopChild:
 	}
 

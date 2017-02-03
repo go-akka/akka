@@ -44,27 +44,27 @@ func (p *ActorCell) ReceiveMessage(message interface{}) (wasHandled bool, err er
 
 func (p *ActorCell) AutoReceiveMessage(msg akka.Envelope) (wasHandled bool, err error) {
 	switch val := msg.Message.(type) {
-	case *akka.Terminated:
+	case *Terminated:
 		{
 			p.ReceivedTerminated(val)
 		}
-	case *akka.AddressTerminated:
+	case *AddressTerminated:
 		{
 
 		}
-	case *akka.Kill:
+	case *Kill:
 		{
 
 		}
-	case *akka.PoisonPill:
+	case *PoisonPill:
 		{
 			p.self.Stop()
 		}
-	case *akka.ActorSelectionMessage:
+	case *ActorSelectionMessage:
 		{
 
 		}
-	case *akka.Identify:
+	case *Identify:
 		{
 			//p.Sender().Tell(message, sender)
 		}
