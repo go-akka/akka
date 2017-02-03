@@ -22,7 +22,7 @@ func (p *ActorBase) AroundPostRestart(cause error, message interface{}) {
 func (p *ActorBase) PreRestart(cause error, message interface{}) {
 	for _, child := range p.Context().Children() {
 		p.Context().Unwatch(child)
-		p.Context().StopActor(child)
+		p.Context().StopChild(child)
 	}
 	p.PostStop()
 }

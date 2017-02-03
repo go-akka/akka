@@ -1,9 +1,11 @@
 package actor
 
 import (
+	"sync"
+
 	"github.com/go-akka/akka"
 	"github.com/go-akka/akka/dispatch"
-	"sync"
+	"github.com/go-akka/akka/dispatch/sysmsg"
 )
 
 type IDispatch interface {
@@ -37,11 +39,11 @@ func (p *ActorCellDispatch) Init(sendSupervise bool, mailboxType akka.MailboxTyp
 	p.swapMailbox(mbox)
 	p.mailbox.SetActor(p)
 
-	createMessage := &akka.Create{}
+	createMessage := &sysmsg.Create{}
 	p.mailbox.SystemEnqueue(p.Self(), createMessage)
 
 	if sendSupervise {
-		p.parent.SendSystemMessage(&akka.Supervise{p.Self(), false})
+		p.parent.SendSystemMessage(&sysmsg.Supervise{p.Self(), false})
 	}
 
 	return
@@ -53,7 +55,7 @@ func (p *ActorCellDispatch) InitWithFailure(err error) {
 	p.swapMailbox(mbox)
 	p.mailbox.SetActor(p)
 
-	createMessage := &akka.Create{}
+	createMessage := &sysmsg.Create{}
 	p.mailbox.SystemEnqueue(p.Self(), createMessage)
 
 	return

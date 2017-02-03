@@ -1,8 +1,14 @@
 package actor
 
 import (
-	"github.com/go-akka/akka"
+	"context"
 	"time"
+
+	"github.com/go-akka/akka"
+)
+
+const (
+	contextKeyOfActorContext = "akka.ActorContext"
 )
 
 var emptyBehavior = func(_ interface{}) bool {
@@ -19,26 +25,30 @@ type ActorBase struct {
 
 	actor akka.Actor
 
-	ctx akka.ActorContext
+	context context.Context
 }
 
-func NewActorBase(actor akka.Actor) *ActorBase {
+func NewActorBase(actor akka.Actor, ctx akka.ActorContext) *ActorBase {
 	actorBase := &ActorBase{
-		actor: actor,
+		actor:   actor,
+		context: context.WithValue(context.Background(), contextKeyOfActorContext, ctx),
 	}
 
 	return actorBase
-}
-
-func (p *ActorBase) String() string {
-	return ""
 }
 
 func (p *ActorBase) Context() akka.ActorContext {
 	if p.hasBeenCleared {
 		return nil
 	}
-	return p.ctx
+
+	v := p.context.Value(contextKeyOfActorContext)
+
+	if ctx, ok := v.(akka.ActorContext); ok {
+		return ctx
+	}
+
+	return nil
 }
 
 func (p *ActorBase) AroundReceive(receiveFunc akka.ReceiveFunc, message interface{}) (wasHandled bool, err error) {
@@ -62,7 +72,7 @@ func (p *ActorBase) Receive(message interface{}) (wasHandled bool, err error) {
 }
 
 func (p *ActorBase) Unhandled(message interface{}) (err error) {
-	if terminatedMessage, ok := message.(akka.Terminated); ok {
+	if terminatedMessage, ok := message.(*akka.Terminated); ok {
 		p.Context().System().EventStream().Publish(&akka.UnhandledMessage{terminatedMessage, p.Sender(), p.Self()})
 	}
 

@@ -2,7 +2,9 @@ package actor
 
 import (
 	"github.com/go-akka/akka"
+	"github.com/go-akka/akka/actor/internal"
 	"math/rand"
+	"sync"
 )
 
 type IChildren interface {
@@ -16,6 +18,7 @@ type IChildren interface {
 	InitChild(ref akka.ActorRef) *akka.ChildRestartStats
 
 	AttachChild(props akka.Props, name string, systemService bool) (akka.ActorRef, error)
+	ChildrenRefs() akka.ChildrenContainer
 }
 
 var (
@@ -24,14 +27,22 @@ var (
 
 type ActorCellChildren struct {
 	*ActorCell
+
+	childrenContainer akka.ChildrenContainer
+
+	containerLocker sync.Mutex
 }
 
 func newActorCellChildren(cell *ActorCell) IChildren {
-	return &ActorCellChildren{cell}
+	return &ActorCellChildren{ActorCell: cell, childrenContainer: internal.EmptyChildrenContainerInstance}
 }
 
 func (p *ActorCellChildren) Children() []akka.ActorRef {
-	return nil
+	return p.childrenContainer.Children()
+}
+
+func (p *ActorCellChildren) ChildrenRefs() akka.ChildrenContainer {
+	return p.childrenContainer
 }
 
 func (p *ActorCellChildren) Child(name string) (ref akka.ActorRef, exist bool) {
@@ -39,15 +50,25 @@ func (p *ActorCellChildren) Child(name string) (ref akka.ActorRef, exist bool) {
 }
 
 func (p *ActorCellChildren) ActorOf(props akka.Props, name string) (ref akka.ActorRef, err error) {
+	// TODO: check name
 	return p.makeChild(props, name, false, false)
 }
 
 func (p *ActorCellChildren) StopChild(actor akka.ActorRef) {
-	return
+	_, exist := p.childrenContainer.GetByRef(actor)
+	if exist {
+		// TODO
+	}
+
+	(actor.(akka.InternalActorRef)).Stop()
 }
 
 func (p *ActorCellChildren) ReserveChild(name string) bool {
-	return false
+	return p.updateChildrenRefs(p.childrenContainer.Reserve(name))
+}
+
+func (p *ActorCellChildren) UnreserveChild(name string) bool {
+	return p.updateChildrenRefs(p.childrenContainer.Unreserve(name))
 }
 
 func (p *ActorCellChildren) InitChild(ref akka.ActorRef) *akka.ChildRestartStats {
@@ -85,4 +106,17 @@ func (p *ActorCellChildren) makeChild(props akka.Props, name string, async bool,
 	ref = actor
 
 	return
+}
+
+func (p *ActorCellChildren) updateChildrenRefs(newRef akka.ChildrenContainer) bool {
+	p.containerLocker.Lock()
+	defer p.containerLocker.Unlock()
+
+	if p.childrenContainer == newRef {
+		return false
+	}
+
+	p.childrenContainer = newRef
+
+	return true
 }

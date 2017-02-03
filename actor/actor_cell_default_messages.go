@@ -2,9 +2,13 @@ package actor
 
 import (
 	"github.com/go-akka/akka"
+	"github.com/go-akka/akka/dispatch/sysmsg"
 )
 
 func (p *ActorCell) Invoke(msg akka.Envelope) (wasHandled bool, err error) {
+
+	p.sender = msg.Sender
+
 	switch message := msg.Message.(type) {
 	case akka.AutoReceivedMessage:
 		{
@@ -17,9 +21,13 @@ func (p *ActorCell) Invoke(msg akka.Envelope) (wasHandled bool, err error) {
 
 func (p *ActorCell) SystemInvoke(msg akka.SystemMessage) (wasHandled bool, err error) {
 	switch v := msg.(type) {
-	case *akka.Create:
+	case *sysmsg.Create:
 		{
 			p.create(v.Failure)
+		}
+	case *sysmsg.Terminate:
+		{
+			p.terminate()
 		}
 	}
 	return
@@ -28,7 +36,7 @@ func (p *ActorCell) SystemInvoke(msg akka.SystemMessage) (wasHandled bool, err e
 func (p *ActorCell) ReceiveMessage(message interface{}) (wasHandled bool, err error) {
 	fn, exist := p.behaviorStack.Current()
 	if !exist {
-		// TODO:
+		// TODO:Create
 		// retrun error
 	}
 	return p.actor.AroundReceive(fn, message)
@@ -71,9 +79,11 @@ func (p *ActorCell) create(failure error) {
 	}
 
 	created, err := p.props.NewActor()
+	if err != nil {
+		panic(err)
+	}
 
-	actor := NewActorBase(created)
-	actor.ctx = p
+	actor := NewActorBase(created, p)
 
 	if setter, ok := created.(actorBaseSetter); ok {
 		setter.SetActorBase(actor)
@@ -94,4 +104,12 @@ func (p *ActorCell) create(failure error) {
 	}
 
 	p.actor.Become(p.actor.Receive, false)
+}
+
+func (p *ActorCell) matchSender(envelope akka.Envelope) akka.ActorRef {
+	sender := envelope.Sender
+	if sender == nil {
+		sender = p.system.deadletters
+	}
+	return sender
 }

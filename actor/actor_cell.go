@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/go-akka/akka"
+	"github.com/go-akka/akka/dispatch/sysmsg"
 )
 
 var (
@@ -16,6 +17,8 @@ type ActorCell struct {
 	props      akka.Props
 	parent     akka.InternalActorRef
 	dispitcher akka.MessageDispatcher
+
+	sender akka.ActorRef
 
 	system *ActorSystemImpl
 
@@ -73,7 +76,7 @@ func (p *ActorCell) Self() akka.ActorRef {
 }
 
 func (p *ActorCell) Sender() (sender akka.ActorRef) {
-	return
+	return p.sender
 }
 
 func (p *ActorCell) System() akka.ActorSystem {
@@ -96,12 +99,8 @@ func (p *ActorCell) Restart(cause error) {
 	return
 }
 
-func (p *ActorCell) StopActor(actor akka.ActorRef) (err error) {
-	return
-}
-
 func (p *ActorCell) Stop() (err error) {
-	return
+	return p.SendSystemMessage(&sysmsg.Terminate{})
 }
 
 func (p *ActorCell) IsLocal() bool {
@@ -129,7 +128,7 @@ func (p *ActorCell) SendMessage(msg akka.Envelope) (err error) {
 }
 
 func (p *ActorCell) SendSystemMessage(msg akka.SystemMessage) (err error) {
-	return
+	return p.dispitcher.SystemDispatch(p, msg)
 }
 
 func (p *ActorCell) IsTerminated() bool {
@@ -137,7 +136,7 @@ func (p *ActorCell) IsTerminated() bool {
 }
 
 func (p *ActorCell) ChildrenRefs() akka.ChildrenContainer {
-	return nil
+	return p.IChildren.ChildrenRefs()
 }
 
 func (p *ActorCell) GetSingleChild(name string) akka.ActorRef {

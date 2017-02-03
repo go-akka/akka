@@ -1,23 +1,23 @@
 package actor
 
 import (
-	"github.com/go-akka/akka"
 	"reflect"
+
+	"github.com/go-akka/akka"
+	"github.com/orcaman/concurrent-map"
 )
 
 type ReceiveActor struct {
 	*ActorBase
-	receiveFuns map[string]interface{}
+	receiveFuns cmap.ConcurrentMap
 	initFn      akka.InitFunc
 }
 
 func NewReceiveActor(actor akka.Actor, initFn akka.InitFunc) *ReceiveActor {
 
 	receiveActor := &ReceiveActor{
-		receiveFuns: make(map[string]interface{}),
+		receiveFuns: cmap.New(),
 	}
-
-	// receiveActor.ActorBase = NewActorBase(receiveActor.Receive, actor)
 
 	return receiveActor
 }
@@ -35,7 +35,7 @@ func (p *ReceiveActor) SetActorBase(actorBase *ActorBase) {
 
 func (p *ReceiveActor) Receive(message interface{}) (handled bool, err error) {
 	msgType := reflect.TypeOf(message)
-	if fn, exist := p.receiveFuns[msgType.String()]; exist {
+	if fn, exist := p.receiveFuns.Get(msgType.String()); exist {
 		handled = true
 
 		retVals := reflect.ValueOf(fn).Call([]reflect.Value{reflect.ValueOf(message)})
@@ -74,9 +74,8 @@ func (p *ReceiveActor) SmartReceive(fn interface{}) (err error) {
 	argType := fnType.In(0)
 
 	// TODO:
-	// 1. add concurrent support
-	// 2. Become and Unbecome ?
-	p.receiveFuns[argType.String()] = fn
+	// 1. Become and Unbecome ?
+	p.receiveFuns.Set(argType.String(), fn)
 
 	return
 }

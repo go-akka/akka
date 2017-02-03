@@ -1,5 +1,22 @@
 package akka
 
+type ChildStats interface {
+	ChildStats()
+}
+
+type ChildNameReserved interface {
+	ChildStats
+
+	ChildNameReserved()
+}
+
+type ChildRestartStats interface {
+	ChildStats
+
+	Child() InternalActorRef
+	ChildRestartStats()
+}
+
 type ChildrenContainer interface {
 	Add(name string, stats ChildRestartStats) ChildrenContainer
 	Remove(child ActorRef) ChildrenContainer

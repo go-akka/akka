@@ -2,6 +2,7 @@ package actor
 
 import (
 	"github.com/go-akka/akka"
+	"github.com/go-akka/akka/dispatch/sysmsg"
 )
 
 type EventStreamActor struct {
@@ -19,14 +20,14 @@ type GuardianActor struct {
 func (p *GuardianActor) Receive(message interface{}) (unhandled bool) {
 
 	switch msg := message.(type) {
-	case akka.Terminated:
+	case *akka.Terminated:
 		{
-			p.Context().StopActor(p.Self())
+			p.Context().StopChild(p.Self())
 			return
 		}
-	case akka.StopChild:
+	case *sysmsg.StopChild:
 		{
-			p.Context().StopActor(msg.Child())
+			p.Context().StopChild(msg.Child())
 		}
 	default:
 		p.Context().System().DeadLetters().Tell(akka.NewDeadLetter(message, p.Sender(), p.Self()), p.Sender())
@@ -51,7 +52,7 @@ func (p *SystemGuardianActor) Receive(message interface{}) (unhandled bool) {
 	switch msg := message.(type) {
 	case *akka.Terminated:
 		{
-			terminatedActor := msg.Actor()
+			terminatedActor := msg.Actor
 			if p.userGuardian.CompareTo(terminatedActor) != 0 {
 				p.Context().Become(p.Terminating, true)
 
@@ -66,9 +67,9 @@ func (p *SystemGuardianActor) Receive(message interface{}) (unhandled bool) {
 
 			return
 		}
-	case *akka.StopChild:
+	case *sysmsg.StopChild:
 		{
-			p.Context().StopActor(msg.Child())
+			p.Context().StopChild(msg.Child())
 		}
 	default:
 		p.Context().System().DeadLetters().Tell(akka.NewDeadLetter(message, p.Sender(), p.Self()), p.Sender())
@@ -83,7 +84,7 @@ func (p *SystemGuardianActor) Terminating(message interface{}) (unhandled bool, 
 
 func (p *SystemGuardianActor) stopWhenAllTerminationHooksDone() {
 	if len(p.terminationHooks) == 0 {
-		p.Context().StopActor(p.Self())
+		p.Context().StopChild(p.Self())
 	}
 }
 

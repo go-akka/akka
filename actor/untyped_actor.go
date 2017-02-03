@@ -17,8 +17,6 @@ func NewUntypedActor(actor akka.Actor, initFn akka.InitFunc) *UntypedActor {
 		initFn: initFn,
 	}
 
-	// untypedActor.ActorBase = NewActorBase(untypedActor.Receive, actor)
-
 	return untypedActor
 }
 

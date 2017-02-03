@@ -2,7 +2,9 @@ package actor
 
 import (
 	"fmt"
+
 	"github.com/go-akka/akka"
+	"github.com/go-akka/akka/dispatch/sysmsg"
 )
 
 type bubbleWalker struct {
@@ -37,17 +39,17 @@ func (p *bubbleWalker) Tell(message interface{}, sender ...akka.ActorRef) (err e
 func (p *bubbleWalker) sendSystemMessage(message akka.SystemMessage) {
 	if p.IsWalking() {
 		switch v := message.(type) {
-		case *akka.Failed:
+		case *sysmsg.Failed:
 			{
 				if internalActorRef, ok := v.Child.(akka.InternalActorRef); ok {
 					internalActorRef.Stop()
 				}
 			}
-		case *akka.Supervise:
+		case *sysmsg.Supervise:
 			{
 
 			}
-		case *akka.DeathWatchNotification:
+		case *sysmsg.DeathWatchNotification:
 			{
 				p.Stop()
 			}

@@ -32,5 +32,5 @@ type ActorContext interface {
 
 	System() ActorSystem
 
-	StopActor(actor ActorRef) (err error)
+	StopChild(actor ActorRef)
 }

@@ -2,6 +2,7 @@ package actor
 
 import (
 	"github.com/go-akka/akka"
+	"github.com/go-akka/akka/dispatch/sysmsg"
 )
 
 type RootGuardianActor struct {
@@ -15,7 +16,7 @@ func (p *RootGuardianActor) Construct(supervisorStrategy akka.SupervisorStrategy
 func (p *RootGuardianActor) Receive(message interface{}) (handled bool, err error) {
 	switch message.(type) {
 	case *akka.Terminated:
-	case *akka.StopChild:
+	case *sysmsg.StopChild:
 	}
 
 	return

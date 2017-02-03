@@ -1,34 +1,37 @@
-package akka
+package internal
 
 import (
+	"github.com/go-akka/akka"
 	"time"
 )
 
-type ChildStats struct {
+type childNameReserved struct {
 	stats string
 }
 
 var (
-	_childNameReservedInstance = &ChildStats{stats: "Name Reserved"}
+	_childNameReservedInstance = &childNameReserved{stats: "Name Reserved"}
 )
 
-func (p ChildStats) String() string {
+func (p childNameReserved) String() string {
 	return p.stats
 }
 
-func ChildNameReserved() *ChildStats {
-	return _childNameReservedInstance
-}
+func (p *childNameReserved) ChildNameReserved() {}
+
+func (p *childNameReserved) ChildStats() {}
 
 type ChildRestartStats struct {
-	uid int64
+	uid   int64
+	child akka.InternalActorRef
 
 	maxNrOfRetriesCount         int
 	restartTimeWindowStartNanos int
 }
 
-func NewChildRestartStats(child ActorRef, maxNrOfRetriesCount, restartTimeWindowStartNanos int) ChildRestartStats {
-	stats := ChildRestartStats{
+func NewChildRestartStats(child akka.InternalActorRef, maxNrOfRetriesCount, restartTimeWindowStartNanos int) akka.ChildRestartStats {
+	stats := &ChildRestartStats{
+		child:                       child,
 		uid:                         child.Path().Uid(),
 		maxNrOfRetriesCount:         maxNrOfRetriesCount,
 		restartTimeWindowStartNanos: restartTimeWindowStartNanos,
@@ -83,3 +86,11 @@ func (p *ChildRestartStats) RetriesInWindowOkay(retries, window int) bool {
 	p.restartTimeWindowStartNanos = now
 	return true
 }
+
+func (p *ChildRestartStats) Child() akka.InternalActorRef {
+	return p.child
+}
+
+func (c *ChildRestartStats) ChildRestartStats() {}
+
+func (p *ChildRestartStats) ChildStats() {}
