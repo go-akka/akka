@@ -2,6 +2,7 @@ package akka
 
 import (
 	"github.com/go-akka/configuration"
+	"time"
 )
 
 type Settings struct {
@@ -19,6 +20,9 @@ type Settings struct {
 	DebugAutoReceive        bool
 	LogLevel                string
 	SchedulerClass          string
+	StdoutLogLevel          string
+	LoggerStartTimeout      time.Duration
+	DebugUnhandledMessage   bool
 
 	LoggersDispatcher string
 
@@ -37,6 +41,13 @@ func NewSettings(systemName string, config *configuration.Config) (settings *Set
 	s.ProviderClass = config.GetString("akka.actor.provider")
 	s.LogLevel = config.GetString("akka.loglevel")
 	s.SchedulerClass = config.GetString("akka.scheduler.implementation")
+
+	s.LogLevel = config.GetString("akka.loglevel")
+	s.StdoutLogLevel = config.GetString("akka.stdout-loglevel")
+	s.Loggers = config.GetStringList("akka.loggers")
+	s.LoggerStartTimeout = config.GetTimeDuration("akka.logger-startup-timeout")
+
+	s.DebugUnhandledMessage = config.GetBoolean("akka.actor.debug.unhandled")
 
 	settings = s
 	return

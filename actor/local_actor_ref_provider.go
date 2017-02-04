@@ -2,6 +2,7 @@ package actor
 
 import (
 	"github.com/go-akka/akka"
+	"github.com/go-akka/akka/actor/props"
 	"github.com/go-akka/akka/dispatch"
 	"github.com/go-akka/akka/pkg/dynamic_access"
 	"sync"
@@ -51,18 +52,18 @@ func (p *LocalActorRefProvider) Init(system akka.ActorSystem) (err error) {
 
 	p.rootPath = akka.NewRootActorPath(akka.NewAddress("akka", p.systemName, "", 0), "/")
 
-	var props akka.Props
-	props, err = Props.Create((*RootGuardianActor)(nil), nil)
+	var actorProps akka.Props
+	actorProps, err = props.Create((*RootGuardianActor)(nil), nil)
 	if err != nil {
 		return
 	}
 
 	theOneWhoWalksTheBubblesOfSpaceTime := NewBubbleWalker(p.rootPath.Append("bubble-walker"), p)
 
-	p.rootGuardian = NewLocalActorRef(system, props, p.defaultDispatcher, p.defaultMailbox, theOneWhoWalksTheBubblesOfSpaceTime, p.rootPath)
+	p.rootGuardian = NewLocalActorRef(system, actorProps, p.defaultDispatcher, p.defaultMailbox, theOneWhoWalksTheBubblesOfSpaceTime, p.rootPath)
 
 	cell := p.rootGuardian.Underlying().(*ActorCell)
-	ref := NewLocalActorRef(system, props, p.defaultDispatcher, p.defaultMailbox, p.rootGuardian, p.rootPath.Append("user"))
+	ref := NewLocalActorRef(system, actorProps, p.defaultDispatcher, p.defaultMailbox, p.rootGuardian, p.rootPath.Append("user"))
 
 	cell.InitChild(ref)
 	ref.Start()

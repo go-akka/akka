@@ -163,6 +163,10 @@ func (p *ActorSystemImpl) ActorOf(props akka.Props, name string) (ref akka.Actor
 	return p.Guardian().Underlying().AttachChild(props, name, false)
 }
 
+func (p *ActorSystemImpl) SystemActorOf(props akka.Props, name string) (ref akka.ActorRef, err error) {
+	return p.SystemGuardian().Underlying().AttachChild(props, name, true)
+}
+
 func (p *ActorSystemImpl) Stop(actor akka.ActorRef) (err error) {
 	return
 }

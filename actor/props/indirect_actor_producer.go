@@ -1,8 +1,14 @@
-package actor
+package props
 
 import (
+	"errors"
 	"github.com/go-akka/akka"
 	"reflect"
+)
+
+var (
+	ErrNoActorProducerSpecified = errors.New("No actor producer specified")
+	ErrCreateInstanceFailure    = errors.New("create instance failure")
 )
 
 type IndirectActorProducer interface {
@@ -10,7 +16,7 @@ type IndirectActorProducer interface {
 	ActorType() reflect.Type
 }
 
-func _CreateProducer(v interface{}, args ...interface{}) (producer IndirectActorProducer, err error) {
+func createProducer(producerCreator ProducerCreatorFunc, v interface{}, args ...interface{}) (producer IndirectActorProducer, err error) {
 	typ := reflect.TypeOf(v)
 
 	if typ == nil {
@@ -27,7 +33,7 @@ func _CreateProducer(v interface{}, args ...interface{}) (producer IndirectActor
 		producer = obj.(IndirectActorProducer)
 
 		return
-	} else if producer, err = _NewReflectProducer(v, args...); err != nil {
+	} else if producer, err = producerCreator(v, args...); err != nil {
 		return
 	}
 
@@ -44,4 +50,17 @@ func (p *_DefaultProducer) Produce() (actor akka.Actor, err error) {
 
 func (p *_DefaultProducer) ActorType() reflect.Type {
 	return nil
+}
+
+func createInstanceByType(typ reflect.Type, args ...interface{}) (v reflect.Value, err error) {
+	typVal := reflect.New(typ)
+
+	if !typVal.IsValid() {
+		err = ErrCreateInstanceFailure
+		return
+	}
+
+	v = typVal
+
+	return
 }

@@ -29,3 +29,8 @@ type ActorSystem interface {
 	// Up-time of this actor system in seconds.
 	Uptime() int64
 }
+
+type ActorSystemImpl interface {
+	ActorSystem
+	SystemActorOf(props Props, name string) (ref ActorRef, err error)
+}

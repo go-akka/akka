@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-akka/akka"
+	"github.com/go-akka/akka/actor/props"
 	"reflect"
 	"strings"
 )
@@ -29,7 +30,7 @@ type _ReflectProducer struct {
 	baseType reflect.Type
 }
 
-func _NewReflectProducer(v interface{}, args ...interface{}) (producer IndirectActorProducer, err error) {
+func newReflectProducer(v interface{}, args ...interface{}) (producer props.IndirectActorProducer, err error) {
 	p := _ReflectProducer{}
 	if err = p.Init(v, args...); err != nil {
 		return

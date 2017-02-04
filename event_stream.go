@@ -1,7 +1,5 @@
 package akka
 
-type LogLevel int
-
 type EventStream interface {
 	LoggingBus
 

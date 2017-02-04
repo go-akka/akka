@@ -6,7 +6,7 @@ type InternalActorRef interface {
 
 	Provider() ActorRefProvider
 
-	String() string
+	// String() string
 	Parent() InternalActorRef
 	GetChild(names ...string) InternalActorRef
 

@@ -12,7 +12,7 @@ type EventStream struct {
 }
 
 func NewEventStream(sys akka.ActorSystem, debug bool) akka.EventStream {
-	eventStream := &EventStream{}
+	eventStream := &EventStream{system: sys}
 
 	eventBus := NewSubchannelClassification(eventStream, eventStream)
 	eventStream.LoggingBus = NewLoggingBus(eventBus)
@@ -24,7 +24,6 @@ func (p *EventStream) StartUnsubscriber() {
 }
 
 func (p *EventStream) PublishToSubscriber(event interface{}, subscriber interface{}) {
-
 	sub, ok := subscriber.(akka.ActorRef)
 	if !ok {
 		return
@@ -39,7 +38,11 @@ func (p *EventStream) PublishToSubscriber(event interface{}, subscriber interfac
 }
 
 func (p *EventStream) GetClassifier(event interface{}) interface{} {
-	return reflect.TypeOf(event)
+	t := reflect.TypeOf(event)
+	for t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return t
 }
 
 func (p *EventStream) Classify(event interface{}, classifier interface{}) bool {

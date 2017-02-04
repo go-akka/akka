@@ -6,8 +6,8 @@ type Props interface {
 	Dispatcher() string
 	Mailbox() string
 	RouterConfig() RouterConfig
-	WithDeploy(deploy Deploy) (props Props, err error)
-	WithDispatcher(dispatcher string) (props Props, err error)
-	WithMailbox(mailbox string) (props Props, err error)
-	WithRouter(config RouterConfig) (props Props, err error)
+	WithDeploy(deploy Deploy) (props Props)
+	WithDispatcher(dispatcher string) (props Props)
+	WithMailbox(mailbox string) (props Props)
+	WithRouter(config RouterConfig) (props Props)
 }
