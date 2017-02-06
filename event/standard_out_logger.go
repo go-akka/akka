@@ -3,9 +3,10 @@ package event
 import (
 	"errors"
 	"fmt"
+	"reflect"
+
 	"github.com/fatih/color"
 	"github.com/go-akka/akka"
-	"reflect"
 )
 
 var (
@@ -16,7 +17,7 @@ var (
 )
 
 var (
-	StandardOutLoggerInstance = NewStandardOutLogger(true)
+	StandardOutLoggerInstance = NewStandardOutLogger(!color.NoColor, 100)
 	StandardOutLoggerType     = reflect.TypeOf((*StandardOutLogger)(nil)).Elem()
 )
 
@@ -24,14 +25,44 @@ type StandardOutLogger struct {
 	*akka.MinimalActorRef
 
 	UseColor bool
+
+	eventChan chan interface{}
 }
 
-func NewStandardOutLogger(useColor bool) *StandardOutLogger {
+func NewStandardOutLogger(useColor bool, bufSize int) *StandardOutLogger {
 	path := akka.NewRootActorPath(akka.NewAddress("akka", "all-systems", "", 0), "/StandardOutLogger")
-	return &StandardOutLogger{
+	logger := &StandardOutLogger{
 		MinimalActorRef: akka.NewMinimalActorRef(path, nil),
 		UseColor:        useColor,
+		eventChan:       make(chan interface{}, bufSize),
 	}
+
+	logger.start()
+
+	return logger
+}
+
+func (p *StandardOutLogger) start() {
+	go func() {
+		for {
+			select {
+			case message, ok := <-p.eventChan:
+				{
+					if !ok {
+						return
+					}
+
+					event, ok := message.(akka.LogEvent)
+					if ok {
+						p.printLogEvent(event)
+					} else {
+						fmt.Println(message)
+					}
+				}
+			}
+		}
+
+	}()
 }
 
 func (s *StandardOutLogger) Provider() akka.ActorRefProvider {
@@ -43,12 +74,7 @@ func (p *StandardOutLogger) Tell(message interface{}, sender ...akka.ActorRef) (
 		errors.New("The message to log must not be null.")
 	}
 
-	event, ok := message.(akka.LogEvent)
-	if ok {
-		p.printLogEvent(event)
-	} else {
-		fmt.Println(message)
-	}
+	p.eventChan <- message
 
 	return
 }

@@ -16,13 +16,15 @@ type Settings struct {
 	ConfigVersion           string
 	ProviderClass           string
 	SupervisorStrategyClass string
-	DebugEventStream        bool
-	DebugAutoReceive        bool
 	LogLevel                string
 	SchedulerClass          string
 	StdoutLogLevel          string
 	LoggerStartTimeout      time.Duration
-	DebugUnhandledMessage   bool
+
+	DebugUnhandledMessage bool
+	DebugEventStream      bool
+	DebugAutoReceive      bool
+	DebugLifecycle        bool
 
 	LoggersDispatcher string
 
@@ -37,7 +39,6 @@ func NewSettings(systemName string, config *configuration.Config) (settings *Set
 
 	s.rebuildConfig()
 
-	s.DebugEventStream = config.GetBoolean("akka.actor.debug.event-stream", false)
 	s.ProviderClass = config.GetString("akka.actor.provider")
 	s.LogLevel = config.GetString("akka.loglevel")
 	s.SchedulerClass = config.GetString("akka.scheduler.implementation")
@@ -47,7 +48,10 @@ func NewSettings(systemName string, config *configuration.Config) (settings *Set
 	s.Loggers = config.GetStringList("akka.loggers")
 	s.LoggerStartTimeout = config.GetTimeDuration("akka.logger-startup-timeout")
 
+	s.DebugEventStream = config.GetBoolean("akka.actor.debug.event-stream", false)
 	s.DebugUnhandledMessage = config.GetBoolean("akka.actor.debug.unhandled")
+	s.DebugAutoReceive = config.GetBoolean("akka.actor.debug.autoreceive")
+	s.DebugLifecycle = config.GetBoolean("akka.actor.debug.lifecycle")
 
 	settings = s
 	return

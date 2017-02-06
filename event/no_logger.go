@@ -15,7 +15,7 @@ func (p *NoLogger) Debug(foramt string, args ...interface{}) {
 	return
 }
 
-func (p *NoLogger) Error(foramt string, args ...interface{}) {
+func (p *NoLogger) Error(cause error, foramt string, args ...interface{}) {
 	return
 }
 
@@ -44,5 +44,9 @@ func (p *NoLogger) IsInfoEnabled() bool {
 }
 
 func (p *NoLogger) IsWarningEnabled() bool {
+	return false
+}
+
+func (p *NoLogger) IsEnabled(level akka.LogLevel) bool {
 	return false
 }

@@ -13,20 +13,21 @@ type LogEvent interface {
 }
 
 type LoggingAdapter interface {
-	Debug(foramt string, args ...interface{})
-	Error(foramt string, args ...interface{})
-	Info(foramt string, args ...interface{})
-	Warning(foramt string, args ...interface{})
-	Log(Level LogLevel, foramt string, args ...interface{})
+	Debug(format string, args ...interface{})
+	Error(cause error, format string, args ...interface{})
+	Info(format string, args ...interface{})
+	Warning(format string, args ...interface{})
+	Log(Level LogLevel, format string, args ...interface{})
 
 	IsDebugEnabled() bool
 	IsErrorEnabled() bool
 	IsInfoEnabled() bool
 	IsWarningEnabled() bool
+	IsEnabled(level LogLevel) bool
 }
 
 type LogMessageFormatter interface {
-	Format(format string, args ...interface{})
+	Format(format string, args ...interface{}) string
 }
 
 type LogLevel int

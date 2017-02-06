@@ -1,8 +1,10 @@
 package actor
 
 import (
+	"fmt"
 	"github.com/go-akka/akka"
 	"github.com/go-akka/akka/dispatch/sysmsg"
+	"github.com/go-akka/akka/event"
 )
 
 func (p *ActorCell) Invoke(msg akka.Envelope) (wasHandled bool, err error) {
@@ -43,6 +45,11 @@ func (p *ActorCell) ReceiveMessage(message interface{}) (wasHandled bool, err er
 }
 
 func (p *ActorCell) AutoReceiveMessage(msg akka.Envelope) (wasHandled bool, err error) {
+	if p.system.settings.DebugAutoReceive {
+		pubmsg := fmt.Sprintf("received AutoReceiveMessage %v", msg)
+		p.publish(event.NewDebugEvent(p.self.Path().String(), p.actor, pubmsg))
+	}
+
 	switch val := msg.Message.(type) {
 	case *Terminated:
 		{
@@ -104,6 +111,10 @@ func (p *ActorCell) create(failure error) {
 	}
 
 	p.actor.Become(p.actor.Receive, false)
+
+	if p.system.settings.DebugLifecycle {
+		p.publish(event.NewDebugEvent(p.self.Path().String(), actor, "started ("+actor.Self().Path().String()+")"))
+	}
 }
 
 func (p *ActorCell) matchSender(envelope akka.Envelope) akka.ActorRef {
