@@ -46,6 +46,7 @@ func NewSettings(systemName string, config *configuration.Config) (settings *Set
 	s.LogLevel = config.GetString("akka.loglevel")
 	s.StdoutLogLevel = config.GetString("akka.stdout-loglevel")
 	s.Loggers = config.GetStringList("akka.loggers")
+	s.LoggersDispatcher = config.GetString("akka.loggers-dispatcher")
 	s.LoggerStartTimeout = config.GetTimeDuration("akka.logger-startup-timeout")
 
 	s.DebugEventStream = config.GetBoolean("akka.actor.debug.event-stream", false)

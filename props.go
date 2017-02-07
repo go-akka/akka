@@ -1,6 +1,11 @@
 package akka
 
+import (
+	"reflect"
+)
+
 type Props interface {
+	Type() reflect.Type
 	NewActor() (actor Actor, err error)
 	Create(v interface{}, args ...interface{}) (props Props, err error)
 	Dispatcher() string

@@ -3,6 +3,7 @@ package props
 import (
 	"github.com/go-akka/akka"
 	"github.com/go-akka/akka/dispatch"
+	"reflect"
 )
 
 var (
@@ -18,7 +19,18 @@ func RegisterGlobalProducerCreator(fn ProducerCreatorFunc) {
 }
 
 func Create(v interface{}, args ...interface{}) (*Props, error) {
-	v, e := emptyProps.Create(v, args...)
+
+	var val interface{}
+	if obj, ok := v.(reflect.Type); ok {
+		for obj.Kind() == reflect.Ptr {
+			obj = obj.Elem()
+		}
+		val = reflect.New(obj).Interface()
+	} else {
+		val = v
+	}
+
+	v, e := emptyProps.Create(val, args...)
 	if e != nil {
 		return nil, e
 	}
@@ -33,6 +45,7 @@ type Props struct {
 	routerConfig    akka.RouterConfig
 	producer        IndirectActorProducer
 	producerCreator ProducerCreatorFunc
+	typ             reflect.Type
 }
 
 func (p Props) Create(v interface{}, args ...interface{}) (props akka.Props, err error) {
@@ -46,6 +59,7 @@ func (p Props) Create(v interface{}, args ...interface{}) (props akka.Props, err
 		producerCreator: p.producerCreator,
 		mailbox:         dispatch.DefaultMailboxId,
 		dispatcher:      dispatch.DefaultDispatcherId,
+		typ:             reflect.TypeOf(v),
 	}
 
 	return
@@ -77,25 +91,29 @@ func (p Props) RouterConfig() akka.RouterConfig {
 func (p Props) WithDeploy(deploy akka.Deploy) (props akka.Props) {
 	newProps := p.copy()
 	newProps.deploy = deploy
-	return
+	return newProps
 }
 
 func (p Props) WithDispatcher(dispatcher string) (props akka.Props) {
 	newProps := p.copy()
-	newProps.dispatcher = dispatcher
-	return
+	newProps.deploy = p.deploy.WithDispatcher(dispatcher)
+	return newProps
 }
 
 func (p Props) WithMailbox(mailbox string) (props akka.Props) {
 	newProps := p.copy()
-	newProps.mailbox = mailbox
-	return
+	newProps.deploy = p.deploy.WithMailbox(mailbox)
+	return newProps
 }
 
 func (p Props) WithRouter(config akka.RouterConfig) (props akka.Props) {
 	newProps := p.copy()
-	newProps.routerConfig = config
-	return
+	newProps.deploy = p.deploy.WithRouterConfig(config)
+	return newProps
+}
+
+func (p Props) Type() reflect.Type {
+	return p.typ
 }
 
 func (p Props) copy() (props *Props) {
@@ -106,5 +124,6 @@ func (p Props) copy() (props *Props) {
 		routerConfig:    p.routerConfig,
 		producer:        p.producer,
 		producerCreator: p.producerCreator,
+		typ:             p.typ,
 	}
 }

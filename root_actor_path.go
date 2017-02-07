@@ -46,8 +46,8 @@ func (p *RootActorPath) Parent() (parent ActorPath) {
 	return
 }
 
-func (p *RootActorPath) Root() (root RootActorPath) {
-	return
+func (p *RootActorPath) Root() (root *RootActorPath) {
+	return p
 }
 
 func (p *RootActorPath) CompareTo(other ActorPath) int {
@@ -63,7 +63,10 @@ func (p *RootActorPath) ToSerializationFormatWithAddress(address Address) string
 }
 
 func (p *RootActorPath) ToStringWithAddress(address Address) string {
-	return ""
+	if len(p.address.host) > 0 && p.address.port > 0 {
+		return p.address.String() + p.name
+	}
+	return address.String() + p.name
 }
 
 func (p *RootActorPath) ToStringWithoutAddress() string {
@@ -86,7 +89,7 @@ func (p *RootActorPath) splitNameAndUid(name string) (n string, uid int64) {
 	}
 
 	n = name[0:i]
-	v, _ := strconv.Atoi(name[i+1:])
+	v, _ := strconv.Atoi(name[:i+1])
 	uid = int64(v)
 	return
 }

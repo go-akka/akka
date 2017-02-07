@@ -52,23 +52,27 @@ func (p *LocalActorRefProvider) Init(system akka.ActorSystem) (err error) {
 
 	p.rootPath = akka.NewRootActorPath(akka.NewAddress("akka", p.systemName, "", 0), "/")
 
-	var actorProps akka.Props
-	actorProps, err = props.Create((*RootGuardianActor)(nil), nil)
-	if err != nil {
+	var rootGuardian, userGuardian, systemGuardian akka.LocalActorRef
+
+	if rootGuardian, err = p.createRootGuardian(system); err != nil {
 		return
 	}
 
-	theOneWhoWalksTheBubblesOfSpaceTime := NewBubbleWalker(p.rootPath.Append("bubble-walker"), p)
+	if userGuardian, err = p.createUserGuardian(rootGuardian, "user"); err != nil {
+		return
+	}
 
-	p.rootGuardian = NewLocalActorRef(system, actorProps, p.defaultDispatcher, p.defaultMailbox, theOneWhoWalksTheBubblesOfSpaceTime, p.rootPath)
+	if systemGuardian, err = p.createSystemGuardian(rootGuardian, "system", userGuardian); err != nil {
+		return
+	}
 
-	cell := p.rootGuardian.Underlying().(*ActorCell)
-	ref := NewLocalActorRef(system, actorProps, p.defaultDispatcher, p.defaultMailbox, p.rootGuardian, p.rootPath.Append("user"))
+	p.rootGuardian = rootGuardian
+	p.guardian = userGuardian
+	p.systemGuardian = systemGuardian
 
-	cell.InitChild(ref)
-	ref.Start()
+	p.rootGuardian.Start()
 
-	p.guardian = ref
+	p.eventStrem.StartDefaultLoggers(p.system)
 
 	return
 }
@@ -156,6 +160,56 @@ func (p *LocalActorRefProvider) UnregisterTempActor(path akka.ActorPath) {
 	return
 }
 
-func (p *LocalActorRefProvider) createRootGuardian() {
+func (p *LocalActorRefProvider) createRootGuardian(system akka.ActorSystem) (ref akka.LocalActorRef, err error) {
+
+	var actorProps akka.Props
+	actorProps, err = props.Create((*RootGuardianActor)(nil), nil)
+	if err != nil {
+		return
+	}
+
+	theOneWhoWalksTheBubblesOfSpaceTime := NewBubbleWalker(p.rootPath.Append("bubble-walker"), p)
+
+	ref = NewLocalActorRef(system, actorProps, p.defaultDispatcher, p.defaultMailbox, theOneWhoWalksTheBubblesOfSpaceTime, p.rootPath)
+
+	return
+}
+
+func (p *LocalActorRefProvider) createUserGuardian(rootGuardian akka.LocalActorRef, name string) (ref akka.LocalActorRef, err error) {
+	cell := rootGuardian.Underlying().(*ActorCell)
+	cell.ReserveChild(name)
+
+	var actorProps akka.Props
+	actorProps, err = props.Create((*RootGuardianActor)(nil), nil)
+	if err != nil {
+		return
+	}
+
+	userGuardian := NewLocalActorRef(p.system, actorProps, p.defaultDispatcher, p.defaultMailbox, rootGuardian, p.rootPath.Append(name))
+
+	cell.InitChild(userGuardian)
+	userGuardian.Start()
+
+	ref = userGuardian
+	return
+}
+
+func (p *LocalActorRefProvider) createSystemGuardian(rootGuardian akka.LocalActorRef, name string, userGuardian akka.LocalActorRef) (ref akka.LocalActorRef, err error) {
+	cell := rootGuardian.Underlying().(*ActorCell)
+	cell.ReserveChild(name)
+
+	var actorProps akka.Props
+	actorProps, err = props.Create((*SystemGuardianActor)(nil), userGuardian)
+	if err != nil {
+		return
+	}
+
+	systemGuardian := NewLocalActorRef(p.system, actorProps, p.defaultDispatcher, p.defaultMailbox, rootGuardian, p.rootPath.Append(name))
+
+	cell.InitChild(systemGuardian)
+	systemGuardian.Start()
+
+	ref = systemGuardian
+	return
 
 }

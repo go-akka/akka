@@ -30,8 +30,7 @@ type ActorSystemImpl struct {
 	deadletters   akka.ActorRef
 	dispatchers   akka.Dispatchers
 
-	provider   akka.ActorRefProvider
-	lookupRoot akka.InternalActorRef
+	provider akka.ActorRefProvider
 }
 
 func AkkaClassLoader() class_loader.ClassLoader {
@@ -255,4 +254,8 @@ func (p *ActorSystemImpl) Start() (err error) {
 		return
 	}
 	return
+}
+
+func (p *ActorSystemImpl) LookupRoot() akka.InternalActorRef {
+	return p.provider.RootGuardian()
 }

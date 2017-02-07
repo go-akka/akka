@@ -17,11 +17,12 @@ var (
 )
 
 var (
-	actorBaseInitFuncType = reflect.TypeOf((*ActorBaseInitFunc)(nil)).Elem()
-	actorBasePtrType      = reflect.TypeOf((*ActorBase)(nil))
-	unTypedActorPtrType   = reflect.TypeOf((*UntypedActor)(nil))
-	receiveActorPtrType   = reflect.TypeOf((*ReceiveActor)(nil))
-	errorType             = reflect.TypeOf((*error)(nil)).Elem()
+	actorBaseInitFuncType  = reflect.TypeOf((*ActorBaseInitFunc)(nil)).Elem()
+	actorBasePtrType       = reflect.TypeOf((*ActorBase)(nil))
+	unTypedActorPtrType    = reflect.TypeOf((*UntypedActor)(nil))
+	receiveActorPtrType    = reflect.TypeOf((*ReceiveActor)(nil))
+	errorType              = reflect.TypeOf((*error)(nil)).Elem()
+	miniActorInterfaceType = reflect.TypeOf((*akka.MinimalActor)(nil)).Elem()
 )
 
 type _ReflectProducer struct {
@@ -40,11 +41,23 @@ func newReflectProducer(v interface{}, args ...interface{}) (producer props.Indi
 }
 
 func (p *_ReflectProducer) Init(v interface{}, args ...interface{}) (err error) {
-	if typ, ok := v.(reflect.Type); ok {
-		p.typ = typ
+
+	var typ reflect.Type
+	var originalType reflect.Type
+
+	if t, ok := v.(reflect.Type); ok {
+		typ = t
+		originalType = t
 	} else {
-		p.typ = reflect.TypeOf(v).Elem()
+		typ = reflect.TypeOf(v)
+		originalType = typ
 	}
+
+	for typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+
+	p.typ = typ
 
 	if isCombined(p.typ, unTypedActorPtrType) {
 		p.args = args
@@ -53,6 +66,9 @@ func (p *_ReflectProducer) Init(v interface{}, args ...interface{}) (err error) 
 	} else if isCombined(p.typ, receiveActorPtrType) {
 		p.args = args
 		p.baseType = receiveActorPtrType
+		return
+	} else if originalType.Implements(miniActorInterfaceType) {
+		p.args = args
 		return
 	}
 
@@ -74,18 +90,26 @@ func (p *_ReflectProducer) Produce() (actor akka.Actor, err error) {
 		return
 	}
 
-	receiver := val.Interface().(akka.Receiver)
-
 	initFunc := p.genInitFunc(val)
 
-	if p.baseType == unTypedActorPtrType {
-		untypedActor := NewUntypedActor(receiver, initFunc)
-		combine(val, unTypedActorPtrType, untypedActor)
-		actor = receiver
-	} else if p.baseType == receiveActorPtrType {
-		receiveActor := NewReceiveActor(receiver, initFunc)
-		combine(val, receiveActorPtrType, receiveActor)
-		actor = receiver
+	switch receiver := val.Interface().(type) {
+	case akka.Receiver:
+		{
+
+			if p.baseType == unTypedActorPtrType {
+				untypedActor := NewUntypedActor(receiver, initFunc)
+				combine(val, unTypedActorPtrType, untypedActor)
+				actor = receiver
+			} else if p.baseType == receiveActorPtrType {
+				receiveActor := NewReceiveActor(receiver, initFunc)
+				combine(val, receiveActorPtrType, receiveActor)
+				actor = receiver
+			}
+		}
+	case akka.ContextReceiver:
+		{
+			actor = NewMinimalActor(receiver, initFunc)
+		}
 	}
 
 	return

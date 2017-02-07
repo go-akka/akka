@@ -46,6 +46,9 @@ func (p *Address) HasLocalScope() bool {
 }
 
 func (p *Address) String() string {
+	if p.protocol != "akka" {
+		panic("")
+	}
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString(p.protocol)
 	buf.WriteString("://")

@@ -41,7 +41,7 @@ func (p *GuardianActor) PreStart() (err error) {
 }
 
 type SystemGuardianActor struct {
-	*ActorBase
+	*UntypedActor
 
 	userGuardian     akka.ActorRef
 	terminationHooks map[akka.ActorRef]bool
@@ -86,8 +86,4 @@ func (p *SystemGuardianActor) stopWhenAllTerminationHooksDone() {
 	if len(p.terminationHooks) == 0 {
 		p.Context().StopChild(p.Self())
 	}
-}
-
-func (p *SystemGuardianActor) PreStart() (err error) {
-	return
 }

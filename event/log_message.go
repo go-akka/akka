@@ -10,6 +10,6 @@ type LogMessage struct {
 	Args      []interface{}
 }
 
-func (p *LogMessage) String() string {
+func (p LogMessage) String() string {
 	return p.Formatter.Format(p.Format, p.Args...)
 }

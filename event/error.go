@@ -30,5 +30,5 @@ func (p *Error) String() string {
 		causeStr = p.cause.Error()
 	}
 
-	return fmt.Sprintf("[%s][%s][%s] [%v]\nCause: [%s]", p.LogLevel(), p.Timestamp(), p.LogSource(), p.Message(), causeStr)
+	return fmt.Sprintf("[%s ][%s][%s] [%s]\nCause: [%s]", p.LogLevel(), p.Timestamp(), p.LogSource(), p.Message(), causeStr)
 }

@@ -8,6 +8,7 @@ type ActorRef interface {
 	CanTell
 	Path() ActorPath
 	CompareTo(other ActorRef) int
+	String() string
 }
 
 type ActorRefWithCell interface {

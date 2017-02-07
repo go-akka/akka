@@ -6,7 +6,7 @@ import (
 )
 
 type BusLogging struct {
-	bus                 LoggingBus
+	bus                 akka.LoggingBus
 	logClass            reflect.Type
 	logSource           string
 	logMessageFormatter akka.LogMessageFormatter
@@ -14,17 +14,17 @@ type BusLogging struct {
 	isErrorEnabled, isWarningEnabled, isInfoEnabled, isDebugEnabled bool
 }
 
-func NewBusLogging(bus LoggingBus, logSource string, logClass reflect.Type, logMessageFormatter akka.LogMessageFormatter) akka.LoggingAdapter {
+func NewBusLogging(bus akka.LoggingBus, logSource string, logClass reflect.Type, logMessageFormatter akka.LogMessageFormatter) akka.LoggingAdapter {
 
 	bugLogging := &BusLogging{
 		bus:                 bus,
 		logSource:           logSource,
 		logClass:            logClass,
 		logMessageFormatter: logMessageFormatter,
-		isErrorEnabled:      bus.logLevel <= akka.ErrorLevel,
-		isWarningEnabled:    bus.logLevel <= akka.WarningLevel,
-		isInfoEnabled:       bus.logLevel <= akka.InfoLevel,
-		isDebugEnabled:      bus.logLevel <= akka.DebugLevel,
+		isErrorEnabled:      bus.LogLevel() <= akka.ErrorLevel,
+		isWarningEnabled:    bus.LogLevel() <= akka.WarningLevel,
+		isInfoEnabled:       bus.LogLevel() <= akka.InfoLevel,
+		isDebugEnabled:      bus.LogLevel() <= akka.DebugLevel,
 	}
 
 	adapter := NewLoggingAdapter(bugLogging, logMessageFormatter)

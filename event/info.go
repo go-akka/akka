@@ -23,5 +23,5 @@ func (p *Info) LogLevel() akka.LogLevel {
 }
 
 func (p *Info) String() string {
-	return fmt.Sprintf("[%s][%s][%s] [%v]", p.LogLevel(), p.Timestamp(), p.LogSource(), p.Message())
+	return fmt.Sprintf("[%s ][%s][%s] [%s]", p.LogLevel(), p.Timestamp(), p.LogSource(), p.Message())
 }

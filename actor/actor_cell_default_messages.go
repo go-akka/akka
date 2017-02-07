@@ -113,7 +113,7 @@ func (p *ActorCell) create(failure error) {
 	p.actor.Become(p.actor.Receive, false)
 
 	if p.system.settings.DebugLifecycle {
-		p.publish(event.NewDebugEvent(p.self.Path().String(), actor, "started ("+actor.Self().Path().String()+")"))
+		p.publish(event.NewDebugEvent(p.self.Path().String(), actor, "started ("+actor.Self().String()+")"))
 	}
 }
 

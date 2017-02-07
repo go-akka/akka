@@ -2,6 +2,7 @@ package actor
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-akka/akka"
@@ -73,8 +74,11 @@ func (p *ActorBase) Receive(message interface{}) (wasHandled bool, err error) {
 
 func (p *ActorBase) Unhandled(message interface{}) (err error) {
 	if terminatedMessage, ok := message.(*Terminated); ok {
-		p.Context().System().EventStream().Publish(&akka.UnhandledMessage{terminatedMessage, p.Sender(), p.Self()})
+		err = fmt.Errorf("Monitored actor [%s] terminated", terminatedMessage.Actor)
+		return
 	}
+
+	p.Context().System().EventStream().Publish(&akka.UnhandledMessage{message, p.Sender(), p.Self()})
 
 	return
 }

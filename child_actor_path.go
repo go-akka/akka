@@ -1,7 +1,6 @@
 package akka
 
 import (
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -48,8 +47,8 @@ func (p *ChildActorPath) Elements() (elems []string) {
 
 		elements = append(elements, current.Name())
 		current = current.Parent()
-		sort.Sort(sort.Reverse(sort.StringSlice(elements)))
 	}
+	elements = p.reverse(elements)
 	return elements
 }
 
@@ -61,20 +60,17 @@ func (p *ChildActorPath) Parent() (parent ActorPath) {
 	return p.parent
 }
 
-func (p *ChildActorPath) Root() (root RootActorPath) {
-	r := p.rootRec(p)
-	return *r
-}
-
-func (p *ChildActorPath) rootRec(path ActorPath) *RootActorPath {
-	switch v := path.(type) {
-	case *RootActorPath:
-		return v
-	case *ChildActorPath:
-		return v.rootRec(v.parent)
-	default:
-		return nil
+func (p *ChildActorPath) Root() (root *RootActorPath) {
+	current := p.parent
+	for {
+		if currentC, ok := current.(*ChildActorPath); ok {
+			current = currentC.parent
+			continue
+		}
+		break
 	}
+
+	return current.Root()
 }
 
 func (p *ChildActorPath) CompareTo(other ActorPath) int {
@@ -90,7 +86,7 @@ func (p *ChildActorPath) ToSerializationFormatWithAddress(address Address) strin
 }
 
 func (p *ChildActorPath) ToStringWithAddress(address Address) string {
-	return ""
+	return address.String() + p.Join()
 }
 
 func (p *ChildActorPath) splitNameAndUid(name string) (n string, uid int64) {
@@ -112,7 +108,7 @@ func (p *ChildActorPath) Append(name string) ActorPath {
 }
 
 func (p *ChildActorPath) ToStringWithoutAddress() string {
-	return ""
+	return p.Join()
 }
 
 func (p *ChildActorPath) Child(child string) (path ActorPath, err error) {
@@ -123,7 +119,21 @@ func (p *ChildActorPath) Descendant(names []string) (path ActorPath, err error) 
 	return
 }
 
+func (p *ChildActorPath) Join() string {
+	joined := strings.Join(p.Elements(), "/")
+	return "/" + joined
+}
+
 func (p *ChildActorPath) String() string {
-	addr := p.Address()
-	return addr.String() + "/" + strings.Join(p.Elements(), "/")
+	return p.ToStringWithAddress(p.Address())
+}
+
+func (p *ChildActorPath) reverse(values []string) []string {
+	lv := len(values)
+	newV := make([]string, lv)
+	for i := 0; i < lv; i++ {
+		newV[lv-1-i] = values[i]
+	}
+
+	return newV
 }

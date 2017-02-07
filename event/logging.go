@@ -1,10 +1,26 @@
 package event
 
 import (
-	"github.com/go-akka/akka"
+	"fmt"
 	"reflect"
 	"strconv"
+
+	"github.com/go-akka/akka"
 )
+
+var (
+	Logging = &logging{}
+)
+
+type DefaultLogMessageFormatter struct {
+}
+
+func (p *DefaultLogMessageFormatter) Format(format string, args ...interface{}) string {
+	return fmt.Sprintf(format, args...)
+}
+
+type logging struct {
+}
 
 func LogClassFor(level akka.LogLevel) reflect.Type {
 
@@ -20,4 +36,18 @@ func LogClassFor(level akka.LogLevel) reflect.Type {
 	}
 
 	panic("Unknown LogLevel: " + strconv.Itoa(int(level)))
+}
+
+func (p *logging) GetLogger(context akka.ActorContext, logMessageFormatter ...akka.LogMessageFormatter) akka.LoggingAdapter {
+	logSource := context.Self().String()
+	logClass := context.Props().Type()
+
+	var formatter akka.LogMessageFormatter
+	if len(logMessageFormatter) == 0 {
+		formatter = &DefaultLogMessageFormatter{}
+	} else {
+		formatter = logMessageFormatter[0]
+	}
+
+	return NewBusLogging(context.System().EventStream(), logSource, logClass, formatter)
 }

@@ -24,10 +24,12 @@ func NewSubchannelClassification(publisher akka.Publisher, classifier akka.Class
 func (p *SubchannelClassification) Publish(event interface{}) {
 
 	// TODO: this is a temp solution
+	// fmt.Println(event)
 
 	c := p.classifier.GetClassifier(event)
 
 	subscribers, exist := p.classes[c]
+
 	if !exist {
 		return
 	}
@@ -38,13 +40,13 @@ func (p *SubchannelClassification) Publish(event interface{}) {
 }
 
 func (p *SubchannelClassification) TSubscribe(subscriber interface{}, class interface{}) bool {
-
 	// TODO: this is a temp solution
 
 	p.locker.Lock()
 	defer p.locker.Unlock()
 
 	oldsubs := p.classes[class]
+
 	for i := 0; i < len(oldsubs); i++ {
 		if oldsubs[i] == subscriber {
 			return false
@@ -73,8 +75,9 @@ func (p *SubchannelClassification) TUnsubscribe(subscriber interface{}, classes 
 		oldsubs := p.classes[classes[i]]
 		for j := 0; j < len(oldsubs); j++ {
 			if oldsubs[j] == subscriber {
-				newSubs := oldsubs[0:j]
-				newSubs = append(newSubs, oldsubs[j+1:])
+				var newSubs []interface{}
+				newSubs = append(newSubs, oldsubs[0:j]...)
+				newSubs = append(newSubs, oldsubs[j+1:]...)
 				p.classes[classes[i]] = newSubs
 				break
 			}

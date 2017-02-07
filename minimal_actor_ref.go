@@ -1,5 +1,9 @@
 package akka
 
+import (
+	"fmt"
+)
+
 var (
 	_ InternalActorRef = (*MinimalActorRef)(nil)
 )
@@ -82,12 +86,12 @@ func (p *MinimalActorRef) Provider() ActorRefProvider {
 	return p.provider
 }
 
-// func (p *MinimalActorRef) String() string {
-// 	if p.path.Uid() == 0 {
-// 		return fmt.Sprintf("Actor[%s]", p.path.String())
-// 	}
-// 	return fmt.Sprintf("Actor[%s]#[%d]", p.path.String(), p.path.Uid())
-// }
+func (p *MinimalActorRef) String() string {
+	if p.path.Uid() == 0 {
+		return fmt.Sprintf("Actor[%s]", p.path.String())
+	}
+	return fmt.Sprintf("Actor[%s]#[%d]", p.path.String(), p.path.Uid())
+}
 
 func (p *MinimalActorRef) Parent() InternalActorRef {
 	return NoBody

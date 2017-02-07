@@ -7,4 +7,5 @@ type LoggingBus interface {
 	LogLevel() LogLevel
 
 	StartStdoutLogger(config *Settings)
+	StartDefaultLoggers(system ActorSystemImpl) (err error)
 }
