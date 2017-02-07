@@ -24,8 +24,4 @@ type ContextPreStarter interface {
 	PreStart(context ActorContext) (err error)
 }
 
-type Constructer interface {
-	Construct() error
-}
-
 type InitFunc func() error

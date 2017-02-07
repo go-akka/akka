@@ -12,6 +12,10 @@ const (
 	contextKeyOfActorContext = "akka.ActorContext"
 )
 
+type constructer interface {
+	construct() error
+}
+
 var emptyBehavior = func(_ interface{}) bool {
 	return false
 }

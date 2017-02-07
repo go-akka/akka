@@ -20,7 +20,7 @@ func NewUntypedActor(actor akka.Actor, initFn akka.InitFunc) *UntypedActor {
 	return untypedActor
 }
 
-func (p *UntypedActor) Construct() error {
+func (p *UntypedActor) construct() error {
 	if p.initFn != nil {
 		return p.initFn()
 	}

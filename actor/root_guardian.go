@@ -9,7 +9,7 @@ type RootGuardianActor struct {
 	*UntypedActor
 }
 
-func (p *RootGuardianActor) Construct(supervisorStrategy akka.SupervisorStrategy) {
+func (p *RootGuardianActor) construct(supervisorStrategy akka.SupervisorStrategy) {
 
 }
 

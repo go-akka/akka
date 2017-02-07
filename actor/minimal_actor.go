@@ -20,7 +20,7 @@ func NewMinimalActor(receiver akka.ContextReceiver, initFn akka.InitFunc) *Minim
 	return minimalActor
 }
 
-func (p *MinimalActor) Construct() error {
+func (p *MinimalActor) construct() error {
 	if p.initFn != nil {
 		return p.initFn()
 	}

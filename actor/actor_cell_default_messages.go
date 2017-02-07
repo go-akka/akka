@@ -96,8 +96,8 @@ func (p *ActorCell) create(failure error) {
 		setter.SetActorBase(actor)
 	}
 
-	if constructer, ok := created.(akka.Constructer); ok {
-		constructer.Construct()
+	if constructer, ok := created.(constructer); ok {
+		constructer.construct()
 	}
 
 	if err != nil {
