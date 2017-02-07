@@ -22,7 +22,7 @@ func (p *childNameReserved) ChildNameReserved() {}
 func (p *childNameReserved) ChildStats() {}
 
 type ChildRestartStats struct {
-	uid   int64
+	uid   int
 	child akka.InternalActorRef
 
 	maxNrOfRetriesCount         int

@@ -1,7 +1,7 @@
 package akka
 
 type ActorPath interface {
-	Uid() int64
+	Uid() int
 	Address() (addr Address)
 	Elements() (elems []string)
 	Name() (name string)

@@ -79,12 +79,12 @@ func (p *ActorCellChildren) AttachChild(props akka.Props, name string, systemSer
 	return p.makeChild(props, name, true, systemService)
 }
 
-func (p *ActorCellChildren) NewUID() int64 {
-	uid := rand.Int63()
+func (p *ActorCellChildren) NewUID() int {
+	uid := rand.Uint32()
 	for uid == 0 {
-		uid = rand.Int63()
+		uid = rand.Uint32()
 	}
-	return uid
+	return int(uid)
 }
 
 func (p *ActorCellChildren) makeChild(props akka.Props, name string, async bool, systemService bool) (ref akka.ActorRef, err error) {

@@ -26,7 +26,7 @@ func NewRootActorPath(address Address, name string) ActorPath {
 	}
 }
 
-func (p *RootActorPath) Uid() int64 {
+func (p *RootActorPath) Uid() int {
 	return 0
 }
 
@@ -81,7 +81,7 @@ func (p *RootActorPath) Descendant(names []string) (path ActorPath, err error) {
 	return
 }
 
-func (p *RootActorPath) splitNameAndUid(name string) (n string, uid int64) {
+func (p *RootActorPath) splitNameAndUid(name string) (n string, uid int) {
 	i := strings.Index(name, "#")
 	if i < 0 {
 		n = name
@@ -89,8 +89,7 @@ func (p *RootActorPath) splitNameAndUid(name string) (n string, uid int64) {
 	}
 
 	n = name[0:i]
-	v, _ := strconv.Atoi(name[:i+1])
-	uid = int64(v)
+	uid, _ = strconv.Atoi(name[:i+1])
 	return
 }
 

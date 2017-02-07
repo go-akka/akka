@@ -1,6 +1,7 @@
 package akka
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -16,10 +17,10 @@ func ActorPathFromString(path string) (actorPath ActorPath, err error) {
 type ChildActorPath struct {
 	parent ActorPath
 	name   string
-	uid    int64
+	uid    int
 }
 
-func NewChildActorPath(parent ActorPath, name string, uid int64) ActorPath {
+func NewChildActorPath(parent ActorPath, name string, uid int) ActorPath {
 
 	return &ChildActorPath{
 		parent: parent,
@@ -28,7 +29,7 @@ func NewChildActorPath(parent ActorPath, name string, uid int64) ActorPath {
 	}
 }
 
-func (p *ChildActorPath) Uid() int64 {
+func (p *ChildActorPath) Uid() int {
 	return p.uid
 }
 
@@ -89,7 +90,7 @@ func (p *ChildActorPath) ToStringWithAddress(address Address) string {
 	return address.String() + p.Join()
 }
 
-func (p *ChildActorPath) splitNameAndUid(name string) (n string, uid int64) {
+func (p *ChildActorPath) splitNameAndUid(name string) (n string, uid int) {
 	i := strings.Index(name, "#")
 	if i < 0 {
 		n = name
@@ -97,8 +98,7 @@ func (p *ChildActorPath) splitNameAndUid(name string) (n string, uid int64) {
 	}
 
 	n = name[0:i]
-	v, _ := strconv.Atoi(name[i+1:])
-	uid = int64(v)
+	uid, _ = strconv.Atoi(name[i+1:])
 	return
 }
 
@@ -125,7 +125,11 @@ func (p *ChildActorPath) Join() string {
 }
 
 func (p *ChildActorPath) String() string {
-	return p.ToStringWithAddress(p.Address())
+
+	if p.Uid() == 0 {
+		return p.ToStringWithAddress(p.Address())
+	}
+	return fmt.Sprintf("%s#%d", p.ToStringWithAddress(p.Address()), p.Uid())
 }
 
 func (p *ChildActorPath) reverse(values []string) []string {
