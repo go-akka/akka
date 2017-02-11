@@ -9,6 +9,7 @@ import (
 
 func (p *ActorCell) Invoke(msg akka.Envelope) (wasHandled bool, err error) {
 
+	p.currentMsg = msg
 	p.sender = msg.Sender
 
 	switch message := msg.Message.(type) {
@@ -61,7 +62,8 @@ func (p *ActorCell) AutoReceiveMessage(msg akka.Envelope) (wasHandled bool, err 
 		}
 	case *Kill:
 		{
-
+			err = fmt.Errorf("Kill")
+			return
 		}
 	case *PoisonPill:
 		{
@@ -73,7 +75,7 @@ func (p *ActorCell) AutoReceiveMessage(msg akka.Envelope) (wasHandled bool, err 
 		}
 	case *Identify:
 		{
-			//p.Sender().Tell(message, sender)
+			p.Sender().Tell(val.MessageID, p.Self())
 		}
 	}
 	return

@@ -17,4 +17,6 @@ type InternalActorRef interface {
 	Stop()
 
 	SendSystemMessage(message SystemMessage) error
+
+	IsTerminated() bool
 }

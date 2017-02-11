@@ -116,11 +116,11 @@ func (p *ActorCell) Provider() akka.ActorRefProvider {
 }
 
 func (p *ActorCell) HasMessages() bool {
-	return false
+	return p.Mailbox().HasMessages()
 }
 
 func (p *ActorCell) NumberOfMessages() int {
-	return 0
+	return p.Mailbox().NumberOfMessages()
 }
 
 func (p *ActorCell) SendMessage(msg akka.Envelope) (err error) {
@@ -132,7 +132,7 @@ func (p *ActorCell) SendSystemMessage(msg akka.SystemMessage) (err error) {
 }
 
 func (p *ActorCell) IsTerminated() bool {
-	return false
+	return p.Mailbox().IsClosed()
 }
 
 func (p *ActorCell) ChildrenRefs() akka.ChildrenContainer {

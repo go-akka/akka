@@ -112,6 +112,10 @@ func (p *MinimalActorRef) GetChild(names ...string) InternalActorRef {
 	return NoBody
 }
 
+func (p *MinimalActorRef) IsTerminated() bool {
+	return false
+}
+
 func (p *MinimalActorRef) Start() {
 	return
 }

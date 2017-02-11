@@ -1,6 +1,7 @@
 package akka
 
 import (
+	"github.com/go-akka/akka/pkg/dynamic_access"
 	"sync"
 )
 
@@ -28,9 +29,25 @@ type ActorSystem interface {
 
 	// Up-time of this actor system in seconds.
 	Uptime() int64
+
+	RegisterExtension(ext ExtensionId) Extension
+	Extension(ext ExtensionId) Extension
+	HasExtension(ext ExtensionId) bool
 }
 
 type ActorSystemImpl interface {
+	ExtendedActorSystem
+}
+
+type ExtendedActorSystem interface {
 	ActorSystem
+
+	Provider() ActorRefProvider
+	Guardian() LocalActorRef
+	SystemGuardian() LocalActorRef
+
 	SystemActorOf(props Props, name string) (ref ActorRef, err error)
+	DynamicAccess() dynamic_access.DynamicAccess
+
+	LogFilter() LoggingFilter
 }

@@ -28,7 +28,9 @@ func (p *ActorBase) PreRestart(cause error, message interface{}) {
 }
 
 func (p *ActorBase) PostRestart(cause error) {
-	// p.PreStart()
+	if preStarter, ok := p.actor.(akka.PreStarter); ok {
+		preStarter.PreStart()
+	}
 }
 
 func (p *ActorBase) AroundPostStop() {

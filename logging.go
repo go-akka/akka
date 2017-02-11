@@ -13,17 +13,22 @@ type LogEvent interface {
 }
 
 type LoggingAdapter interface {
+	LoggingFilter
+
+	IsEnabled(level LogLevel) bool
+
 	Debug(format string, args ...interface{})
 	Error(cause error, format string, args ...interface{})
 	Info(format string, args ...interface{})
 	Warning(format string, args ...interface{})
 	Log(Level LogLevel, format string, args ...interface{})
+}
 
+type LoggingFilter interface {
 	IsDebugEnabled() bool
 	IsErrorEnabled() bool
 	IsInfoEnabled() bool
 	IsWarningEnabled() bool
-	IsEnabled(level LogLevel) bool
 }
 
 type LogMessageFormatter interface {

@@ -92,6 +92,19 @@ func (p *ActorSystemImpl) Descendant(names ...string) (path akka.ActorPath, err 
 	return
 }
 
+func (p *ActorSystemImpl) DynamicAccess() dynamic_access.DynamicAccess {
+	return p.dynamicAccess
+}
+
+func (p *ActorSystemImpl) Provider() akka.ActorRefProvider {
+	return p.provider
+}
+
+func (p *ActorSystemImpl) LogFilter() akka.LoggingFilter {
+	val, _ := p.dynamicAccess.CreateInstanceByName(p.settings.LoggingFilter, p.settings, p.eventStream)
+	return val.(akka.LoggingFilter)
+}
+
 func (p *ActorSystemImpl) Guardian() akka.LocalActorRef {
 	return p.provider.Guardian()
 }
@@ -258,4 +271,16 @@ func (p *ActorSystemImpl) Start() (err error) {
 
 func (p *ActorSystemImpl) LookupRoot() akka.InternalActorRef {
 	return p.provider.RootGuardian()
+}
+
+func (p *ActorSystemImpl) RegisterExtension(ext akka.ExtensionId) akka.Extension {
+	return nil
+}
+
+func (p *ActorSystemImpl) Extension(ext akka.ExtensionId) akka.Extension {
+	return nil
+}
+
+func (p *ActorSystemImpl) HasExtension(ext akka.ExtensionId) bool {
+	return false
 }

@@ -17,6 +17,7 @@ type Settings struct {
 	ProviderClass           string
 	SupervisorStrategyClass string
 	LogLevel                string
+	LoggingFilter           string
 	SchedulerClass          string
 	StdoutLogLevel          string
 	LoggerStartTimeout      time.Duration
@@ -47,6 +48,7 @@ func NewSettings(systemName string, config *configuration.Config) (settings *Set
 	s.StdoutLogLevel = config.GetString("akka.stdout-loglevel")
 	s.Loggers = config.GetStringList("akka.loggers")
 	s.LoggersDispatcher = config.GetString("akka.loggers-dispatcher")
+	s.LoggingFilter = config.GetString("akka.logging-filter")
 	s.LoggerStartTimeout = config.GetTimeDuration("akka.logger-startup-timeout")
 
 	s.DebugEventStream = config.GetBoolean("akka.actor.debug.event-stream", false)
