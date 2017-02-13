@@ -2,13 +2,16 @@ package actor
 
 import (
 	"fmt"
-	"github.com/go-akka/akka/dispatch"
-	"github.com/go-akka/akka/event"
+	"reflect"
 	"regexp"
 	"sync"
 	"time"
 
+	"github.com/orcaman/concurrent-map"
+
 	"github.com/go-akka/akka"
+	"github.com/go-akka/akka/dispatch"
+	"github.com/go-akka/akka/event"
 	"github.com/go-akka/akka/pkg/class_loader"
 	"github.com/go-akka/akka/pkg/dynamic_access"
 	"github.com/go-akka/configuration"
@@ -30,7 +33,11 @@ type ActorSystemImpl struct {
 	deadletters   akka.ActorRef
 	dispatchers   akka.Dispatchers
 
-	provider akka.ActorRefProvider
+	provider         akka.ActorRefProvider
+	extensions       cmap.ConcurrentMap
+	extensionsLocker sync.Mutex
+
+	log akka.LoggingAdapter
 }
 
 func AkkaClassLoader() class_loader.ClassLoader {
@@ -50,6 +57,7 @@ func NewActorSystem(name string, config ...*configuration.Config) (system *Actor
 		startedTime:   time.Now(),
 		classLoader:   classLoader,
 		dynamicAccess: dynamic_access.NewReflectiveDynamicAccess(classLoader),
+		extensions:    cmap.New(),
 	}
 
 	var conf *configuration.Config
@@ -64,7 +72,11 @@ func NewActorSystem(name string, config ...*configuration.Config) (system *Actor
 	if err = sys.configureEventStream(); err != nil {
 		return
 	}
-	// sys.configureLoggers()
+
+	if err = sys.configureLoggers(); err != nil {
+		return
+	}
+
 	// if err = sys.configureScheduler(); err != nil {
 	// 	return
 	// }
@@ -125,8 +137,8 @@ func (p *ActorSystemImpl) Name() string {
 	return p.name
 }
 
-func (p *ActorSystemImpl) Log() {
-	return
+func (p *ActorSystemImpl) Log() akka.LoggingAdapter {
+	return p.log
 }
 
 func (p *ActorSystemImpl) DeadLetters() akka.ActorRef {
@@ -180,7 +192,11 @@ func (p *ActorSystemImpl) SystemActorOf(props akka.Props, name string) (ref akka
 }
 
 func (p *ActorSystemImpl) Stop(actor akka.ActorRef) (err error) {
-	return
+	// path := actor.Path()
+	// guard := p.Guardian().Path()
+	// sys := p.SystemGuardian().Path()
+
+	return nil
 }
 
 func (p *ActorSystemImpl) ActorSelection(path akka.ActorPath) (selection akka.ActorSelection, err error) {
@@ -209,7 +225,9 @@ func (p *ActorSystemImpl) configureEventStream() (err error) {
 }
 
 func (p *ActorSystemImpl) configureLoggers() (err error) {
-	return
+	p.log = event.NewBusLogging(p.eventStream, "ActorSystem("+p.name+")", reflect.TypeOf(p), &event.DefaultLogMessageFormatter{})
+
+	return nil
 }
 
 func (p *ActorSystemImpl) configureScheduler() (err error) {
@@ -266,6 +284,9 @@ func (p *ActorSystemImpl) Start() (err error) {
 	if err = p.provider.Init(p); err != nil {
 		return
 	}
+
+	p.loadExtensions()
+
 	return
 }
 
@@ -273,14 +294,73 @@ func (p *ActorSystemImpl) LookupRoot() akka.InternalActorRef {
 	return p.provider.RootGuardian()
 }
 
+func (p *ActorSystemImpl) loadExtensions() {
+
+	loadExtensions := func(key string, throwOnLoadFail bool) {
+		for _, extensionFqn := range p.settings.Config().GetStringList(key) {
+			extensionType, exist := p.classLoader.ClassNameOf(extensionFqn)
+			if !exist {
+				p.log.Error(nil, "Extension of %s is not exist", extensionFqn)
+				if throwOnLoadFail {
+					panic(fmt.Errorf("Extension of %s is not exist", extensionFqn))
+				}
+				continue
+			}
+
+			ins, err := p.dynamicAccess.CreateInstanceByType(extensionType)
+			if err != nil {
+				p.log.Error(err, "While trying to load extension %s skipping...", extensionFqn)
+				if throwOnLoadFail {
+					panic(fmt.Errorf("While trying to load extension %s, %s", extensionFqn, err))
+				}
+				continue
+			}
+
+			switch v := ins.(type) {
+			case akka.ExtensionProvider:
+				{
+					p.RegisterExtension(v.Lookup())
+				}
+			case akka.ExtensionId:
+				{
+					p.RegisterExtension(v)
+				}
+			}
+		}
+	}
+
+	loadExtensions("akka.library-extensions", true)
+	loadExtensions("akka.extensions", false)
+}
+
 func (p *ActorSystemImpl) RegisterExtension(ext akka.ExtensionId) akka.Extension {
-	return nil
+	if ext == nil {
+		return nil
+	}
+
+	p.extensionsLocker.Lock()
+	defer p.extensionsLocker.Unlock()
+
+	extensionIns, exist := p.extensions.Get(ext.ExtensionType().String())
+	if exist {
+		return extensionIns.(akka.Extension)
+	}
+
+	newextensionIns := ext.CreateExtension(p)
+	p.extensions.Set(ext.ExtensionType().String(), newextensionIns)
+
+	return newextensionIns
 }
 
 func (p *ActorSystemImpl) Extension(ext akka.ExtensionId) akka.Extension {
+	v, exist := p.extensions.Get(ext.ExtensionType().String())
+	if exist {
+		return v.(akka.Extension)
+	}
 	return nil
 }
 
 func (p *ActorSystemImpl) HasExtension(ext akka.ExtensionId) bool {
-	return false
+	_, exist := p.extensions.Get(ext.ExtensionType().String())
+	return exist
 }

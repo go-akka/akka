@@ -10,7 +10,7 @@ type ActorSystem interface {
 
 	Settings() *Settings
 	Name() string
-	Log()
+	Log() LoggingAdapter
 	DeadLetters() ActorRef
 	Terminate() sync.WaitGroup
 

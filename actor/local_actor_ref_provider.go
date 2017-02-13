@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	_ akka.ActorRefProvider = (*LocalActorRefProvider)(nil)
+	_ akka.LocalActorRefProvider = (*LocalActorRefProvider)(nil)
 )
 
 type LocalActorRefProvider struct {
@@ -159,6 +159,8 @@ func (p *LocalActorRefProvider) TerminationFuture() {
 func (p *LocalActorRefProvider) UnregisterTempActor(path akka.ActorPath) {
 	return
 }
+
+func (p *LocalActorRefProvider) LocalActorRefProvider() {}
 
 func (p *LocalActorRefProvider) createRootGuardian(system akka.ActorSystem) (ref akka.LocalActorRef, err error) {
 

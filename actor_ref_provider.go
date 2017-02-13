@@ -33,6 +33,11 @@ type ActorRefProvider interface {
 	UnregisterTempActor(path ActorPath)
 }
 
+type LocalActorRefProvider interface {
+	ActorRefProvider
+	LocalActorRefProvider()
+}
+
 type ActorRefFactory interface {
 	ActorOf(props Props, name string) (ref ActorRef, err error)
 	ActorSelection(path ActorPath) (selection ActorSelection, err error)
@@ -40,4 +45,5 @@ type ActorRefFactory interface {
 
 type RemoteActorRefProvider interface {
 	ActorRefProvider
+	RemoteActorRefProvider()
 }
