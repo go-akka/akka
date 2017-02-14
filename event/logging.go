@@ -51,3 +51,22 @@ func (p *logging) GetLogger(context akka.ActorContext, logMessageFormatter ...ak
 
 	return NewBusLogging(context.System().EventStream(), logSource, logClass, formatter)
 }
+
+func (p *logging) GetLoggerWithActorSystem(system akka.ActorSystem, logSource interface{}, logMessageFormatter ...akka.LogMessageFormatter) akka.LoggingAdapter {
+	logSourceStr := ""
+
+	if str, ok := logSource.(string); ok {
+		logSourceStr = str
+	} else {
+		logSourceStr = reflect.TypeOf(logSource).String()
+	}
+
+	var formatter akka.LogMessageFormatter
+	if len(logMessageFormatter) == 0 {
+		formatter = &DefaultLogMessageFormatter{}
+	} else {
+		formatter = logMessageFormatter[0]
+	}
+
+	return NewBusLogging(system.EventStream(), fmt.Sprintf("%s(%s)", logSourceStr, system), reflect.TypeOf(system), formatter)
+}

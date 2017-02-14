@@ -8,8 +8,7 @@ import (
 )
 
 var (
-	_ akka.Cell                = (*ActorCell)(nil)
-	_ akka.UntypedActorContext = (*ActorCell)(nil)
+	_ akka.Cell = (*ActorCell)(nil)
 )
 
 type ActorCell struct {
@@ -144,10 +143,6 @@ func (p *ActorCell) GetSingleChild(name string) akka.ActorRef {
 }
 
 func (p *ActorCell) GetChildByName(name string) (stats akka.ChildStats, exist bool) {
-	return
-}
-
-func (p *ActorCell) UntypedBecome(behavior akka.UntypedReceive, discardOld bool) {
 	return
 }
 

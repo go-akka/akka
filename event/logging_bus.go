@@ -73,7 +73,7 @@ func (p *LoggingBus) StartStdoutLogger(config *akka.Settings) {
 
 }
 
-func (p *LoggingBus) StartDefaultLoggers(system akka.ActorSystemImpl) (err error) {
+func (p *LoggingBus) StartDefaultLoggers(system akka.ExtendedActorSystem) (err error) {
 	logName := simpleName(p) + "(" + system.Name() + ")"
 	logLevel := akka.LogLevelFor(system.Settings().LogLevel)
 	loggerTypes := system.Settings().Loggers
@@ -122,7 +122,7 @@ func (p *LoggingBus) StartDefaultLoggers(system akka.ActorSystemImpl) (err error
 	return
 }
 
-func (p *LoggingBus) addLogger(system akka.ActorSystemImpl, loggerType reflect.Type, logLevel akka.LogLevel, loggingBusName string, timeout time.Duration) error {
+func (p *LoggingBus) addLogger(system akka.ExtendedActorSystem, loggerType reflect.Type, logLevel akka.LogLevel, loggingBusName string, timeout time.Duration) error {
 	loggerName := p.createLoggerName(loggerType)
 	props, err := props.Create(loggerType)
 	loggerProps := props.WithDispatcher(system.Settings().LoggersDispatcher)

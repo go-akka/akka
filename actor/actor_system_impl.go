@@ -176,7 +176,7 @@ func (p *ActorSystemImpl) Path() akka.ActorPath {
 }
 
 func (p *ActorSystemImpl) String() string {
-	return ""
+	return p.LookupRoot().Path().Root().Address().String()
 }
 
 func (p *ActorSystemImpl) Tell(message interface{}, sender akka.ActorRef) {

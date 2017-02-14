@@ -45,5 +45,6 @@ type ActorRefFactory interface {
 
 type RemoteActorRefProvider interface {
 	ActorRefProvider
+	RemoteSettings() *RemoteSettings
 	RemoteActorRefProvider()
 }

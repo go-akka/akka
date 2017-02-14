@@ -45,7 +45,7 @@ func (p *Address) HasLocalScope() bool {
 	return len(p.host) == 0
 }
 
-func (p *Address) String() string {
+func (p Address) String() string {
 	if p.protocol != "akka" {
 		panic("")
 	}

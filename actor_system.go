@@ -35,10 +35,6 @@ type ActorSystem interface {
 	HasExtension(ext ExtensionId) bool
 }
 
-type ActorSystemImpl interface {
-	ExtendedActorSystem
-}
-
 type ExtendedActorSystem interface {
 	ActorSystem
 

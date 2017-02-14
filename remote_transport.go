@@ -1,13 +1,8 @@
 package akka
 
-import (
-	"github.com/go-akka/configuration"
-)
-
 type RemoteTransport interface {
 	Provider() RemoteActorRefProvider
 
-	Config() configuration.Config
 	System() ExtendedActorSystem
 	Start()
 
