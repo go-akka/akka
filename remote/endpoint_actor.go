@@ -15,14 +15,14 @@ type EndpointActor struct {
 
 	LocalAddress  akka.Address
 	RemoteAddress akka.Address
-	Settings      *akka.RemoteSettings
+	Settings      *RemoteSettings
 	// Transport     AkkaProtocolTransport
 	log            akka.LoggingAdapter
 	EventPublisher EventPublisher
 	Inbound        bool
 }
 
-func NewEndpointActor(localAddress akka.Address, remoteAddress akka.Address, settings *akka.RemoteSettings) *EndpointActor {
+func NewEndpointActor(localAddress akka.Address, remoteAddress akka.Address, settings *RemoteSettings) *EndpointActor {
 	return &EndpointActor{
 		LocalAddress:  localAddress,
 		RemoteAddress: remoteAddress,

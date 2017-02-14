@@ -42,9 +42,3 @@ type ActorRefFactory interface {
 	ActorOf(props Props, name string) (ref ActorRef, err error)
 	ActorSelection(path ActorPath) (selection ActorSelection, err error)
 }
-
-type RemoteActorRefProvider interface {
-	ActorRefProvider
-	RemoteSettings() *RemoteSettings
-	RemoteActorRefProvider()
-}

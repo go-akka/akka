@@ -25,7 +25,7 @@ type ListensFailure struct {
 type EndpointManager struct {
 	*actor.UntypedActor
 
-	settings         *akka.RemoteSettings
+	settings         *RemoteSettings
 	extendedSystem   akka.ExtendedActorSystem
 	endpointId       []int
 	eventPublisher   *EventPublisher

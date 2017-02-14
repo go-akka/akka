@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	_ akka.RemoteTransport = (*Remoting)(nil)
+	_ RemoteTransport = (*Remoting)(nil)
 )
 
 type EndpointPolicy interface {
@@ -14,7 +14,7 @@ type EndpointPolicy interface {
 
 type Remoting struct {
 	system   akka.ExtendedActorSystem
-	provider akka.RemoteActorRefProvider
+	provider RemoteActorRefProvider
 
 	eventPublisher *EventPublisher
 	log            akka.LoggingAdapter
@@ -23,7 +23,7 @@ type Remoting struct {
 	defaultAddress akka.Address
 }
 
-func NewRemoting(system akka.ExtendedActorSystem, provider akka.RemoteActorRefProvider) *Remoting {
+func NewRemoting(system akka.ExtendedActorSystem, provider RemoteActorRefProvider) *Remoting {
 
 	log := event.Logging.GetLoggerWithActorSystem(system, "remoting")
 	remoting := &Remoting{
@@ -36,7 +36,7 @@ func NewRemoting(system akka.ExtendedActorSystem, provider akka.RemoteActorRefPr
 	return remoting
 }
 
-func (p *Remoting) Provider() akka.RemoteActorRefProvider {
+func (p *Remoting) Provider() RemoteActorRefProvider {
 	return p.provider
 }
 
@@ -52,7 +52,7 @@ func (p *Remoting) Addresses() []akka.Address {
 	return p.addresses
 }
 
-func (p *Remoting) Send(message interface{}, sender akka.ActorRef, recipient akka.RemoteActorRef) {
+func (p *Remoting) Send(message interface{}, sender akka.ActorRef, recipient RemoteActorRef) {
 	return
 }
 

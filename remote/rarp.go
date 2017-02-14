@@ -11,10 +11,10 @@ var (
 )
 
 type RARP struct {
-	provider akka.RemoteActorRefProvider
+	provider RemoteActorRefProvider
 }
 
-func NewRARP(provider akka.RemoteActorRefProvider) *RARP {
+func NewRARP(provider RemoteActorRefProvider) *RARP {
 	return &RARP{
 		provider: provider,
 	}
@@ -37,10 +37,10 @@ func (p *RARP) ExtensionType() reflect.Type {
 }
 
 func (p *RARP) CreateExtension(system akka.ExtendedActorSystem) akka.Extension {
-	return NewRARP(system.Provider().(akka.RemoteActorRefProvider))
+	return NewRARP(system.Provider().(RemoteActorRefProvider))
 }
 
-func (p *RARP) Provider() akka.RemoteActorRefProvider {
+func (p *RARP) Provider() RemoteActorRefProvider {
 	return p.provider
 }
 

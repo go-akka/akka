@@ -1,7 +1,8 @@
-package akka
+package remote
 
 import (
 	"fmt"
+	"github.com/go-akka/akka"
 	"github.com/go-akka/configuration"
 	"strings"
 )
@@ -67,7 +68,7 @@ func (p *RemoteSettings) Config() *configuration.Config {
 	return p.config
 }
 
-func (p *RemoteSettings) ConfigureDispatcher(props Props) Props {
+func (p *RemoteSettings) ConfigureDispatcher(props akka.Props) akka.Props {
 	if len(p.Dispatcher) == 0 {
 		return props
 	}

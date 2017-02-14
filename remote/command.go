@@ -25,7 +25,7 @@ func (p *ShutdownAndFlush) RemotingCommand() {}
 type Send struct {
 	Message   interface{}
 	Sender    akka.ActorRef
-	Recipient akka.RemoteActorRef
+	Recipient RemoteActorRef
 	seq       *SeqNo
 }
 
